@@ -1,0 +1,258 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kullanıcı Yönetimi - TTKA</title>
+    
+    <!-- CSS -->
+    <link href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 20px;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .card-header {
+            background-color: #2f4d5a;
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 15px 20px;
+        }
+        .admin-badge {
+            background-color: #28a745;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+        }
+        .status-active {
+            color: #28a745;
+        }
+        .status-inactive {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'index' %}">TTKA</a>
+            <div class="navbar-text text-white">
+                {{ user_data.username }}
+                {% if user_data.username == 'alim' %}
+                    <span class="admin-badge">Yönetici</span>
+                {% endif %}
+            </div>
+            <a href="{% url 'yonetici:panel' %}" class="btn btn-outline-light">Yönetici Paneline Dön</a>
+        </div>
+    </nav>
+
+    <div class="container" style="margin-top: 80px;">
+        <!-- Başlık -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">Kullanıcı Yönetimi</h2>
+        </div>
+
+        <!-- Kullanıcı Listesi -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Kullanıcı Listesi</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="kullaniciTablosu" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Kullanıcı Adı</th>
+                                <th>E-posta</th>
+                                <th>Son Giriş</th>
+                                <th>Durum</th>
+                                <th>Yetki</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    {% if user.last_login %}
+                                        {{ user.last_login|date:"d.m.Y H:i" }}
+                                    {% else %}
+                                        <span class="text-muted">Hiç giriş yapmadı</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.is_active %}
+                                        <span class="badge bg-primary">
+                                            <i class="bi bi-check-circle me-1"></i>Aktif
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-x-circle me-1"></i>Pasif
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.is_admin %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-shield-check me-1"></i>Yönetici
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">
+                                            <i class="bi bi-person me-1"></i>Kullanıcı
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-warning me-2" 
+                                            onclick="duzenleModal(this)" 
+                                            data-id="{{ user.id }}"
+                                            data-username="{{ user.username }}"
+                                            data-email="{{ user.email }}"
+                                            data-active="{{ user.is_active|yesno:'true,false' }}"
+                                            data-admin="{{ user.is_admin|yesno:'true,false' }}">
+                                        <i class="bi bi-pencil"></i> Düzenle
+                                    </button>
+                                    <a href="{% url 'yonetici:kullanici_sil' user.id %}" 
+                                       class="btn btn-sm btn-danger"
+                                       onclick="return confirm('{{ user.username }} kullanıcısını silmek istediğinizden emin misiniz?')">
+                                        <i class="bi bi-trash"></i> Sil
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Düzenleme Modal -->
+    <div class="modal fade" id="duzenleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Kullanıcı Düzenle</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="updateForm" method="post" action="{% url 'yonetici:kullanici_guncelle' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="user_id" id="edit_user_id">
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Kullanıcı Adı</label>
+                            <input type="text" name="username" id="edit_username" class="form-control" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">E-posta</label>
+                            <input type="email" name="email" id="edit_email" class="form-control" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="is_active" id="edit_is_active">
+                                <label class="form-check-label">Aktif Kullanıcı</label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="is_admin" id="edit_is_admin">
+                                <label class="form-check-label">Yönetici Yetkisi</label>
+                            </div>
+                        </div>
+                        
+                        <div class="text-end">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                            <button type="submit" class="btn btn-primary">Güncelle</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    
+    <script>
+        function duzenleModal(button) {
+            try {
+                // Kullanıcı verilerini al
+                const id = button.getAttribute('data-id');
+                const username = button.getAttribute('data-username');
+                const email = button.getAttribute('data-email');
+                const isActive = button.getAttribute('data-active') === 'true';
+                const isAdmin = button.getAttribute('data-admin') === 'true';
+                
+                console.log('Düzenleme verileri:', {
+                    id, username, email, isActive, isAdmin
+                });
+
+                if (!id || !username) {
+                    throw new Error('Gerekli veriler eksik');
+                }
+
+                // Form alanlarını doldur
+                document.getElementById('edit_user_id').value = id;
+                document.getElementById('edit_username').value = username;
+                document.getElementById('edit_email').value = email || '';
+                document.getElementById('edit_is_active').checked = isActive;
+                document.getElementById('edit_is_admin').checked = isAdmin;
+
+                // Bootstrap modal nesnesini oluştur ve göster
+                const modalElement = document.getElementById('duzenleModal');
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            } catch (error) {
+                console.error('Modal açılırken hata:', error);
+                alert('Kullanıcı düzenleme modalı açılırken bir hata oluştu: ' + error.message);
+            }
+        }
+
+        $(document).ready(function() {
+            $('#kullaniciTablosu').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/tr.json'
+                },
+                order: [[0, 'asc']],
+                paging: false,
+                dom: '<"top">rt<"clear">',
+                scrollY: '600px',
+                scrollCollapse: true
+            });
+        });
+
+        // Form submit handler
+        document.getElementById('updateForm').addEventListener('submit', function(e) {
+            const formData = new FormData(this);
+            console.log('Form verileri:', {
+                user_id: formData.get('user_id'),
+                username: formData.get('username'),
+                email: formData.get('email'),
+                is_active: formData.get('is_active') === 'on',
+                is_admin: formData.get('is_admin') === 'on'
+            });
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,113 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}TTKA{% endblock %}</title>
+
+  <!-- Favicons -->
+  <link href="{% static 'img/favicon.png' %}" rel="icon">
+  <link href="{% static 'img/apple-touch-icon.png' %}" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/aos/aos.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/glightbox/css/glightbox.min.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/swiper/swiper-bundle.min.css' %}" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body class="index-page">
+
+  <!-- Header -->
+  <header id="header" class="header d-flex align-items-center fixed-top">
+    <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+      <a href="{% url 'index' %}" class="logo d-flex align-items-center">
+        <h1 class="sitename">TTKA</h1>
+      </a>
+
+      <!-- Navigation Menu -->
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="{% url 'index' %}" {% if request.path == '/' %}class="active"{% endif %}>Anasayfa</a></li>
+          <li><a href="{% url 'turkiye_geneli' %}" {% if 'turkiye-geneli' in request.path %}class="active"{% endif %}>Türkiye Geneli</a></li>
+          <li><a href="{% url 'iller' %}" {% if 'iller' in request.path %}class="active"{% endif %}>İller</a></li>
+          <li><a href="{% url 'olumlu_yaralanmali' %}" {% if 'olumlu-yaralanmali' in request.path %}class="active"{% endif %}>Ölümlü-Yaralanmalı Kazalar</a></li>
+          <li><a href="{% url 'ceza' %}" {% if 'ceza' in request.path %}class="active"{% endif %}>Trafik Cezaları</a></li>
+          <li><a href="{% url 'hakkinda' %}" {% if 'hakkinda' in request.path %}class="active"{% endif %}>Hakkında</a></li>
+          
+          {% if user_data.is_authenticated %}
+            <li class="nav-item dropdown ms-auto">
+              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-person-circle me-1"></i>
+                {{ user_data.username }}
+                {% if user_data.username == 'alim' %}
+                  <span class="admin-badge">Yönetici</span>
+                {% endif %}
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profilim</a></li>
+                {% if user_data.username == 'alim' %}
+                  <li>
+                    <a class="dropdown-item d-flex align-items-center" href="{% url 'yonetici:panel' %}">
+                      <i class="bi bi-shield-lock me-2"></i>
+                      Yönetici Paneli
+                      <span class="admin-indicator">Yönetici</span>
+                    </a>
+                  </li>
+                {% endif %}
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{% url 'cikis' %}"><i class="bi bi-box-arrow-right me-2"></i>Çıkış Yap</a></li>
+              </ul>
+            </li>
+          {% else %}
+            <li class="ms-auto"><a href="{% url 'giris' %}">Giriş Yap</a></li>
+            <li><a href="{% url 'kayit' %}">Kayıt Ol</a></li>
+          {% endif %}
+        </ul>
+        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      </nav>
+    </div>
+  </header>
+
+  {% block content %}{% endblock %}
+
+  <!-- Footer -->
+  <footer id="footer" class="footer">
+    <div class="container copyright text-center mt-4">
+      <p>© <span>Copyright</span> <strong class="px-1">TTKA</strong> <span>All Rights Reserved</span></p>
+    </div>
+  </footer>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center">
+    <i class="bi bi-arrow-up-short"></i>
+  </a>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'vendor/aos/aos.js' %}"></script>
+  <script src="{% static 'vendor/glightbox/js/glightbox.min.js' %}"></script>
+  <script src="{% static 'vendor/swiper/swiper-bundle.min.js' %}"></script>
+
+  <!-- Main JS File -->
+  <script src="{% static 'js/main.js' %}"></script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html> 

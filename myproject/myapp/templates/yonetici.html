@@ -1,0 +1,189 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yönetici Paneli - TTKA</title>
+
+    <!-- Favicons -->
+    <link href="{% static 'img/favicon.png' %}" rel="icon">
+    <link href="{% static 'img/apple-touch-icon.png' %}" rel="apple-touch-icon">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Vendor CSS Files -->
+    <link href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+
+    <!-- Main CSS File -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+
+    <style>
+        .admin-dashboard {
+            padding: 120px 0 60px;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        .admin-card {
+            height: 100%;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .admin-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .admin-card .icon {
+            font-size: 3rem;
+            color: #2f4d5a;
+            margin-bottom: 1rem;
+        }
+
+        .admin-card h3 {
+            color: #2f4d5a;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .admin-card p {
+            color: #6c757d;
+            margin-bottom: 1.5rem;
+        }
+
+        .admin-card .btn {
+            background-color: #2f4d5a;
+            border-color: #2f4d5a;
+            padding: 0.5rem 2rem;
+            font-weight: 500;
+        }
+
+        .admin-card .btn:hover {
+            background-color: #1f3d4a;
+            border-color: #1f3d4a;
+        }
+
+        /* Header/menü stilleri */
+        .header {
+            background-color: #1a1a1a !important;  /* Koyu siyah */
+        }
+
+        .header .logo h1 {
+            color: #ffffff;
+        }
+
+        .navmenu a {
+            color: #ffffff !important;
+        }
+
+        .nav-link.dropdown-toggle {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-link.dropdown-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .admin-badge {
+            background-color: #28a745;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 5px;
+        }
+
+        /* Dropdown menü stilleri */
+        .dropdown-menu {
+            background-color: #1a1a1a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .dropdown-menu .dropdown-item {
+            color: #ffffff !important;
+        }
+
+        .dropdown-menu .dropdown-item:hover {
+            background-color: #333333;
+        }
+
+        .dropdown-divider {
+            border-top-color: rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header id="header" class="header d-flex align-items-center fixed-top">
+        <div class="container-fluid container-xl d-flex align-items-center justify-content-between">
+            <a href="{% url 'index' %}" class="logo d-flex align-items-center">
+                <h1>TTKA</h1>
+            </a>
+            
+            <nav id="navmenu" class="navmenu">
+                <ul>
+                    <li><a href="{% url 'index' %}">Anasayfa</a></li>
+                    <li class="nav-item dropdown ms-auto">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle me-1"></i>
+                            {{ user_data.username }}
+                            <span class="admin-badge">Yönetici</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profilim</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'cikis' %}"><i class="bi bi-box-arrow-right me-2"></i>Çıkış Yap</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Admin Dashboard -->
+    <section class="admin-dashboard">
+        <div class="container">
+            <div class="row g-4 justify-content-center">
+                <!-- Veri Yönetimi -->
+                <div class="col-md-6">
+                    <div class="admin-card text-center p-4">
+                        <div class="icon">
+                            <i class="bi bi-database"></i>
+                        </div>
+                        <h3>Veri Yönetimi</h3>
+                        <p>Trafik kazaları verilerini görüntüleyin, düzenleyin ve yönetin.</p>
+                        <a href="{% url 'yonetici:veri_yonetimi' %}" class="btn btn-primary">Veri Yönetimine Git</a>
+                    </div>
+                </div>
+
+                <!-- Kullanıcı Yönetimi -->
+                <div class="col-md-6">
+                    <div class="admin-card text-center p-4">
+                        <div class="icon">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <h3>Kullanıcı Yönetimi</h3>
+                        <p>Kullanıcı hesaplarını görüntüleyin ve yönetin.</p>
+                        <a href="{% url 'yonetici:kullanici_yonetimi' %}" class="btn btn-primary">Kullanıcı Yönetimine Git</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Vendor JS Files -->
+    <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+    <!-- Main JS File -->
+    <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html> 

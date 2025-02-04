@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Trafik Cezaları - TTKA{% endblock %}
+
+{% block extra_css %}
+    <style>
+        /* Page Title Styles */
+        .page-title {
+            background-color: #2f4d5a !important;
+            padding: 120px 0 60px;
+            position: relative;
+        }
+        
+        .page-title h1 {
+            color: #fff;
+            font-size: 32px;
+            margin-bottom: 15px;
+        }
+        
+        .page-title p {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 0;
+        }
+
+        .ceza-section {
+            padding: 40px 0;
+        }
+
+        .filter-card {
+            margin-bottom: 30px;
+        }
+
+        .table th {
+            background-color: #2f4d5a;
+            color: white;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: rgba(47, 77, 90, 0.05);
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <main class="main">
+        <!-- Page Title -->
+        <div class="page-title">
+            <div class="container position-relative">
+                <h1>Trafik Cezaları</h1>
+                <p>{{ selected_yil }} Yılı Trafik Cezaları Listesi</p>
+            </div>
+        </div>
+
+        <!-- Ceza Content -->
+        <section class="ceza-section">
+            <div class="container">
+                <!-- Filtreler -->
+                <div class="card filter-card">
+                    <div class="card-body">
+                        <form method="get" class="row g-3 align-items-end">
+                            <div class="col-md-3">
+                                <label for="yil" class="form-label">Yıl</label>
+                                <select name="yil" id="yil" class="form-select">
+                                    {% for yil in available_years %}
+                                        <option value="{{ yil }}" {% if yil|stringformat:"i" == selected_yil %}selected{% endif %}>{{ yil }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label for="ay" class="form-label">Ay</label>
+                                <select name="ay" id="ay" class="form-select">
+                                    {% for ay in available_months %}
+                                        <option value="{{ ay }}" {% if ay == selected_ay %}selected{% endif %}>{{ ay }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label for="search" class="form-label">Ceza Ara</label>
+                                <input type="text" name="search" id="search" class="form-control" value="{{ search_query }}" placeholder="Ceza türü...">
+                            </div>
+                            
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">Filtrele</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Ceza Tablosu -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Yıl</th>
+                                        <th>Ay</th>
+                                        <th>Ceza Türü</th>
+                                        <th>Ceza Sayısı</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ceza in cezalar %}
+                                        <tr>
+                                            <td>{{ ceza.yil }}</td>
+                                            <td>{{ ceza.ay|title }}</td>
+                                            <td>{{ ceza.veriler.ceza_turu }}</td>
+                                            <td>{{ ceza.veriler.ceza_sayisi }}</td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="4" class="text-center">Veri bulunamadı</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        // Yıl veya ay değiştiğinde formu otomatik submit et
+        document.getElementById('yil').addEventListener('change', function() {
+            this.form.submit();
+        });
+        document.getElementById('ay').addEventListener('change', function() {
+            this.form.submit();
+        });
+    </script>
+{% endblock %} 

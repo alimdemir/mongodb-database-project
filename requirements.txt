@@ -1,0 +1,9 @@
+Django==5.0.2
+django-bootstrap5==23.4
+django-crispy-forms==2.1
+crispy-bootstrap5==2024.2
+Pillow==10.2.0
+python-dotenv==1.0.1
+django-chartjs==2.3.0
+pandas==2.2.1
+numpy==1.26.4 

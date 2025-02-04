@@ -1,0 +1,1292 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veri Yönetimi - TTKA</title>
+    
+    <!-- CSS -->
+    <link href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 20px;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .card-header {
+            background-color: #2f4d5a;
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 15px 20px;
+        }
+        .filter-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.05);
+        }
+        .btn-primary {
+            background-color: #2f4d5a;
+            border-color: #2f4d5a;
+        }
+        .btn-primary:hover {
+            background-color: #1f3d4a;
+            border-color: #1f3d4a;
+        }
+        .table thead th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .action-buttons .btn {
+            margin: 0 2px;
+        }
+        .form-text {
+            font-size: 0.875em;
+            color: #6c757d;
+        }
+        .text-danger {
+            color: #dc3545;
+        }
+        .veri-detay {
+            padding: 8px 12px;
+            border-radius: 4px;
+            background-color: transparent;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .veri-detay span {
+            white-space: nowrap;
+        }
+        
+        .veri-detay strong {
+            color: #2f4d5a;
+            font-weight: 500;
+        }
+        
+        .veri-detay small {
+            color: #6c757d;
+            white-space: nowrap;
+            margin-left: auto;
+        }
+        
+        .table td {
+            vertical-align: middle;
+            padding: 8px;
+        }
+
+        /* Zebra striping için */
+        .table-striped > tbody > tr:nth-of-type(odd) > * {
+            background-color: #f8f9fa;
+        }
+        
+        .table-striped > tbody > tr:nth-of-type(even) > * {
+            background-color: #ffffff;
+        }
+        
+        /* DataTables ayarları */
+        #veriTablosu {
+            font-size: 0.9rem;
+        }
+        
+        #veriTablosu_wrapper {
+            margin-top: 1rem;
+        }
+
+        /* Toplu silme butonu stili */
+        #topluSilBtn {
+            display: inline-block !important;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        #topluSilBtn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Checkbox stili */
+        .veri-sec {
+            cursor: pointer;
+        }
+
+        /* Yönetici rozeti stili */
+        .admin-badge {
+            background-color: #28a745 !important;  /* Yeşil */
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container">
+            <a class="navbar-brand" href="{% url 'index' %}">TTKA</a>
+            <div class="navbar-text text-white">
+                {{ user_data.username }}
+                {% if user_data.username == 'alim' %}
+                    <span class="admin-badge">Yönetici</span>
+                {% endif %}
+            </div>
+            <a href="{% url 'yonetici:panel' %}" class="btn btn-outline-light">Yönetici Paneline Dön</a>
+        </div>
+    </nav>
+
+    <div class="container" style="margin-top: 80px;">
+        <!-- Başlık -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">Trafik Kazası Veri Yönetimi</h2>
+        </div>
+
+        <!-- Mesajlar -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                        {% endfor %}
+        {% endif %}
+
+        <!-- Veri Ekleme Formu -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Manuel Veri Ekle</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="veriEkleForm" action="{% url 'yonetici:veri_ekle' %}">
+                    {% csrf_token %}
+                    
+                    <!-- Koleksiyon Seçimi -->
+                    <div class="mb-4">
+                        <label for="koleksiyon" class="form-label">Koleksiyon</label>
+                        <select name="koleksiyon" id="koleksiyon" class="form-select" required onchange="koleksiyonDegisti()">
+                            <option value="">Seçiniz...</option>
+                            <option value="genel">Genel</option>
+                            <option value="iller">İller</option>
+                            <option value="kaza_arac_cinsleri">Kaza Araç Cinsleri</option>
+                            <option value="kaza_arac_sayisi">Kaza Araç Sayısı</option>
+                            <option value="kaza_olus_turleri">Kaza Oluş Türleri</option>
+                            <option value="kaza_unsurlari">Kaza Unsurları</option>
+                            <option value="surucu_kusurlari">Sürücü Kusurları</option>
+                            <option value="trafik_cezalari">Trafik Cezaları</option>
+                    </select>
+                </div>
+                    
+                    <!-- Dinamik Form Alanları -->
+                    <div id="dinamikFormAlanlari" style="display: none;">
+                        <!-- Yıl ve Ay Seçimi -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="yil" class="form-label">Yıl</label>
+                                <input type="number" name="yil" class="form-control" required min="2000" max="2100">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="ay" class="form-label">Ay</label>
+                                <select class="form-select" name="ay" required>
+                                    <option value="">Seçiniz...</option>
+                                    <option value="Ocak">Ocak</option>
+                                    <option value="Şubat">Şubat</option>
+                                    <option value="Mart">Mart</option>
+                                    <option value="Nisan">Nisan</option>
+                                    <option value="Mayıs">Mayıs</option>
+                                    <option value="Haziran">Haziran</option>
+                                    <option value="Temmuz">Temmuz</option>
+                                    <option value="Ağustos">Ağustos</option>
+                                    <option value="Eylül">Eylül</option>
+                                    <option value="Ekim">Ekim</option>
+                                    <option value="Kasım">Kasım</option>
+                                    <option value="Aralık">Aralık</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Koleksiyona Özel Alanlar -->
+                        <div id="koleksiyonAlanlari">
+                            <!-- JavaScript ile doldurulacak -->
+                        </div>
+                        
+                        <div class="text-end mt-4">
+                            <button type="submit" class="btn btn-primary" id="veriEkleBtn">
+                                <i class="bi bi-plus-circle"></i> Veri Ekle
+                            </button>
+                        </div>
+                </div>
+            </form>
+            </div>
+        </div>
+
+        <!-- JSON Veri Yükleme -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">JSON Veri Yükle</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{% url 'yonetici:json_veri_yukle' %}" enctype="multipart/form-data" id="jsonUploadForm">
+                    {% csrf_token %}
+                    
+                    <!-- Önce Koleksiyon Seçimi -->
+                    <div class="mb-4">
+                        <label for="json_koleksiyon" class="form-label">Koleksiyon</label>
+                        <select name="koleksiyon" id="json_koleksiyon" class="form-select" required onchange="dosyaSeciminiEtkinlestir()">
+                            <option value="">Koleksiyon seçiniz...</option>
+                            <option value="genel">Genel</option>
+                            <option value="iller">İller</option>
+                            <option value="kaza_arac_cinsleri">Kaza Araç Cinsleri</option>
+                            <option value="kaza_arac_sayisi">Kaza Araç Sayısı</option>
+                            <option value="kaza_olus_turleri">Kaza Oluş Türleri</option>
+                            <option value="kaza_unsurlari">Kaza Unsurları</option>
+                            <option value="surucu_kusurlari">Sürücü Kusurları</option>
+                            <option value="trafik_cezalari">Trafik Cezaları</option>
+                        </select>
+                        <div class="form-text"></div>
+                    </div>
+                    
+                    <!-- Sonra Dosya Seçimi -->
+                    <div class="mb-4">
+                        <label for="json_files" class="form-label">JSON Dosyası</label>
+                        <input type="file" name="json_files[]" id="json_files" class="form-control" 
+                               multiple accept=".json" required disabled>
+                        
+                    </div>
+
+                    <!-- Seçilen Dosyaların Listesi -->
+                    <div id="selectedFiles" class="mb-4">
+                        <!-- Seçilen dosyalar burada listelenecek -->
+                    </div>
+
+                    <!-- Yükleme Butonu -->
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button type="button" class="btn btn-secondary" onclick="formReset()">
+                            <i class="bi bi-x-circle me-1"></i>Temizle
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="uploadButton" disabled>
+                            <i class="bi bi-upload me-1"></i>Yükle
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Veri Listesi ve Filtreleme -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Kaza Verileri Silme ve Güncelleme</h5>
+            </div>
+            <div class="card-body">
+                <!-- Filtreleme Bölümü -->
+                <div class="filter-section">
+                    <form method="get" class="row g-3 align-items-end" id="filterForm">
+                        <div class="col-md-3">
+                            <label for="filter_koleksiyon" class="form-label">Koleksiyon</label>
+                            <select name="koleksiyon" id="filter_koleksiyon" class="form-select">
+                                <option value="">Tümü</option>
+                                <option value="genel" {% if selected_koleksiyon == 'genel' %}selected{% endif %}>Genel</option>
+                                <option value="iller" {% if selected_koleksiyon == 'iller' %}selected{% endif %}>İller</option>
+                                <option value="kaza_arac_cinsleri" {% if selected_koleksiyon == 'kaza_arac_cinsleri' %}selected{% endif %}>Kaza Araç Cinsleri</option>
+                                <option value="kaza_arac_sayisi" {% if selected_koleksiyon == 'kaza_arac_sayisi' %}selected{% endif %}>Kaza Araç Sayısı</option>
+                                <option value="kaza_olus_turleri" {% if selected_koleksiyon == 'kaza_olus_turleri' %}selected{% endif %}>Kaza Oluş Türleri</option>
+                                <option value="kaza_unsurlari" {% if selected_koleksiyon == 'kaza_unsurlari' %}selected{% endif %}>Kaza Unsurları</option>
+                                <option value="surucu_kusurlari" {% if selected_koleksiyon == 'surucu_kusurlari' %}selected{% endif %}>Sürücü Kusurları</option>
+                                <option value="trafik_cezalari" {% if selected_koleksiyon == 'trafik_cezalari' %}selected{% endif %}>Trafik Cezaları</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Yıl Seçimi -->
+                        <div class="col-md-2">
+                            <label for="yil" class="form-label">Yıl</label>
+                            <select name="yil" id="yil" class="form-select">
+                                <option value="">Tümü</option>
+                                {% for yil in available_years %}
+                                    <option value="{{ yil }}" {% if yil|stringformat:"i" == selected_yil %}selected{% endif %}>
+                                        {{ yil }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Ay Seçimi -->
+                        <div class="col-md-2">
+                            <label for="ay" class="form-label">Ay</label>
+                            <select name="ay" id="ay" class="form-select">
+                                <option value="">Tümü</option>
+                                <option value="ocak" {% if selected_ay == 'ocak' %}selected{% endif %}>Ocak</option>
+                                <option value="subat" {% if selected_ay == 'subat' %}selected{% endif %}>Şubat</option>
+                                <option value="mart" {% if selected_ay == 'mart' %}selected{% endif %}>Mart</option>
+                                <option value="nisan" {% if selected_ay == 'nisan' %}selected{% endif %}>Nisan</option>
+                                <option value="mayis" {% if selected_ay == 'mayis' %}selected{% endif %}>Mayıs</option>
+                                <option value="haziran" {% if selected_ay == 'haziran' %}selected{% endif %}>Haziran</option>
+                                <option value="temmuz" {% if selected_ay == 'temmuz' %}selected{% endif %}>Temmuz</option>
+                                <option value="agustos" {% if selected_ay == 'agustos' %}selected{% endif %}>Ağustos</option>
+                                <option value="eylul" {% if selected_ay == 'eylul' %}selected{% endif %}>Eylül</option>
+                                <option value="ekim" {% if selected_ay == 'ekim' %}selected{% endif %}>Ekim</option>
+                                <option value="kasim" {% if selected_ay == 'kasim' %}selected{% endif %}>Kasım</option>
+                                <option value="aralik" {% if selected_ay == 'aralik' %}selected{% endif %}>Aralık</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Arama ve Filtre Butonu -->
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">Ara</label>
+                            <input type="text" name="search" id="search" class="form-control" 
+                                   value="{{ search_query }}" placeholder="Arama...">
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">Filtrele</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Veri Tablosu -->
+                <div class="table-responsive">
+                    <!-- CSRF Token -->
+                    {% csrf_token %}
+
+                    <!-- Toplu Silme Butonu -->
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-danger" id="topluSilBtn" disabled onclick="topluSil()">
+                            <i class="bi bi-trash"></i> Seçilenleri Sil
+                        </button>
+                    </div>
+
+                    <table id="veriTablosu" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" id="tumunuSec" onchange="tumunuSecDegistir(this)">
+                                </th>
+                                <th>Koleksiyon</th>
+                                <th>Yıl</th>
+                                <th>Ay</th>
+                                <th>Veri Detayı</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for veri in veriler %}
+                                <tr id="veri-{{ veri.id }}" data-id="{{ veri.id }}">
+                                    <td>
+                                        <input type="checkbox" class="veri-sec" value="{{ veri.id }}" data-koleksiyon="{{ veri.koleksiyon_adi }}">
+                                    </td>
+                                    <td>{{ veri.koleksiyon_adi }}</td>
+                                    <td>{{ veri.yil }}</td>
+                                    <td>{{ veri.ay }}</td>
+                                    <td>
+                                        {% if veri.koleksiyon_adi == 'genel' %}
+                                            <strong>Yerleşim Yeri:</strong><br>
+                                            Toplam Kaza: {{ veri.veriler.yerlesim_yeri.toplam_kaza_sayisi }},
+                                            Ölümlü: {{ veri.veriler.yerlesim_yeri.olumlu_kaza_sayisi }},
+                                            Yaralanmalı: {{ veri.veriler.yerlesim_yeri.yaralanmali_kaza_sayisi }},
+                                            Maddi Hasarlı: {{ veri.veriler.yerlesim_yeri.maddi_hasarli_kaza_sayisi }}<br>
+                                            <strong>Yerleşim Yeri Dışı:</strong><br>
+                                            Toplam Kaza: {{ veri.veriler.yerlesim_yeri_disi.toplam_kaza_sayisi }},
+                                            Ölümlü: {{ veri.veriler.yerlesim_yeri_disi.olumlu_kaza_sayisi }},
+                                            Yaralanmalı: {{ veri.veriler.yerlesim_yeri_disi.yaralanmali_kaza_sayisi }},
+                                            Maddi Hasarlı: {{ veri.veriler.yerlesim_yeri_disi.maddi_hasarli_kaza_sayisi }}
+                                        {% elif veri.koleksiyon_adi == 'iller' %}
+                                            İl: {{ veri.veriler.il }}<br>
+                                            Ölümlü/Yaralanmalı: {{ veri.veriler.olumlu_yarali_kaza }},
+                                            Maddi Hasarlı: {{ veri.veriler.maddi_hasarli_kaza }},
+                                            Ölü Sayısı: {{ veri.veriler.olu_sayisi }},
+                                            Yaralı Sayısı: {{ veri.veriler.yarali_sayisi }}
+                                        {% elif veri.koleksiyon_adi == 'kaza_arac_cinsleri' %}
+                                            Araç Cinsi: {{ veri.veriler.arac_cinsi }},
+                                            Kaza Sayısı: {{ veri.veriler.kaza_sayisi }}
+                                        {% elif veri.koleksiyon_adi == 'kaza_arac_sayisi' %}
+                                            Araç Türü: {{ veri.veriler.arac_turu }},
+                                            Araç Sayısı: {{ veri.veriler.arac_sayisi }}
+                                        {% elif veri.koleksiyon_adi == 'kaza_olus_turleri' %}
+                                            Kaza Oluş Türü: {{ veri.veriler.kaza_olus_turu }},
+                                            Kaza Sayısı: {{ veri.veriler.kaza_sayisi }}
+                                        {% elif veri.koleksiyon_adi == 'kaza_unsurlari' %}
+                                            Kaza Unsuru: {{ veri.veriler.kaza_unsuru }},
+                                            Kusur Sayısı: {{ veri.veriler.kusur_sayisi }}
+                                        {% elif veri.koleksiyon_adi == 'surucu_kusurlari' %}
+                                            Sürücü Kusuru: {{ veri.veriler.kusur_turu }},
+                                            Kusur Sayısı: {{ veri.veriler.kusur_sayisi }}
+                                        {% elif veri.koleksiyon_adi == 'trafik_cezalari' %}
+                                            Ceza Türü: {{ veri.veriler.ceza_turu }},
+                                            Ceza Sayısı: {{ veri.veriler.ceza_sayisi }}
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-warning" 
+                                                onclick="duzenleModal(this)" 
+                                                data-id="{{ veri.id }}"
+                                                data-koleksiyon="{{ veri.koleksiyon_adi }}"
+                                                data-yil="{{ veri.yil }}"
+                                                data-ay="{{ veri.ay }}"
+                                                data-veriler='{{ veri.veriler_json }}'>
+                                            <i class="bi bi-pencil"></i> Güncelle
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="tekliSil('{{ veri.koleksiyon_adi }}', '{{ veri.id }}')">
+                                            <i class="bi bi-trash"></i> Sil
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Güncelleme Modal -->
+<div class="modal fade" id="duzenleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Veri Güncelle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="guncellemeForm" onsubmit="veriGuncelle(event)">
+                    {% csrf_token %}
+                    <input type="hidden" id="edit_id" name="id">
+                    <input type="hidden" id="edit_koleksiyon" name="koleksiyon">
+                    
+                    <div class="mb-3">
+                        <label for="edit_yil" class="form-label">Yıl</label>
+                        <input type="number" class="form-control" id="edit_yil" name="yil" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_ay" class="form-label">Ay</label>
+                        <select class="form-control" id="edit_ay" name="ay" required>
+                            <option value="ocak">Ocak</option>
+                            <option value="subat">Şubat</option>
+                            <option value="mart">Mart</option>
+                            <option value="nisan">Nisan</option>
+                            <option value="mayis">Mayıs</option>
+                            <option value="haziran">Haziran</option>
+                            <option value="temmuz">Temmuz</option>
+                            <option value="agustos">Ağustos</option>
+                            <option value="eylul">Eylül</option>
+                            <option value="ekim">Ekim</option>
+                            <option value="kasim">Kasım</option>
+                            <option value="aralik">Aralık</option>
+                        </select>
+                    </div>
+                    
+                    <div id="dinamikAlanlar">
+                        <!-- Dinamik alanlar JavaScript ile eklenecek -->
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                        <button type="submit" class="btn btn-warning">Güncelle</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        var table = $('#veriTablosu').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/tr.json'
+            },
+            order: [[2, 'desc'], [3, 'asc']],
+            pageLength: 50,
+            dom: '<"top"l>rt<"bottom"ip><"clear">',
+            lengthMenu: [[25, 50, 100, -1], [25, 50, 100, "Tümü"]]
+        });
+
+        // Koleksiyon filtresi
+        $('#koleksiyon_filter').on('change', function() {
+            table.column(1).search(this.value).draw();
+        });
+
+        // Yıl filtresi
+        $('#yil_filter').on('change', function() {
+            table.column(2).search(this.value).draw();
+        });
+
+        // Ay filtresi
+        $('#ay_filter').on('change', function() {
+            table.column(3).search(this.value).draw();
+        });
+
+        // Arama filtresi
+        $('#searchInput').on('keyup', function() {
+            table.search(this.value).draw();
+        });
+
+        // Checkbox değişikliklerini dinleme ve buton durumunu güncelleme
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tüm checkbox'ları seç
+            const checkboxes = document.querySelectorAll('.veri-sec');
+            const tumunuSecCheckbox = document.getElementById('tumunuSec');
+            const topluSilBtn = document.getElementById('topluSilBtn');
+
+            // Her checkbox için change event listener ekle
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const secilenSayisi = document.querySelectorAll('.veri-sec:checked').length;
+                    topluSilBtn.disabled = secilenSayisi === 0;
+                    
+                    // Tümünü seç checkbox'ını güncelle
+                    tumunuSecCheckbox.checked = secilenSayisi === checkboxes.length;
+                });
+            });
+
+            // Tümünü seç checkbox'ı için event listener
+            tumunuSecCheckbox.addEventListener('change', function() {
+                checkboxes.forEach(cb => cb.checked = this.checked);
+                topluSilBtn.disabled = !this.checked;
+            });
+        });
+
+        // Tümünü seç/kaldır fonksiyonu
+        function tumunuSecDegistir(checkbox) {
+            const tumCheckboxlar = document.querySelectorAll('.veri-sec');
+            const topluSilBtn = document.getElementById('topluSilBtn');
+            
+            tumCheckboxlar.forEach(cb => cb.checked = checkbox.checked);
+            topluSilBtn.disabled = !checkbox.checked;
+        }
+
+        // Toplu silme işlemi
+        function topluSil() {
+            const secilenler = document.querySelectorAll('.veri-sec:checked');
+            if (secilenler.length === 0) {
+                alert('Lütfen silinecek verileri seçin');
+                return;
+            }
+
+            if (confirm(`${secilenler.length} veriyi silmek istediğinizden emin misiniz?`)) {
+                const silinecekler = Array.from(secilenler).map(cb => {
+                    const row = cb.closest('tr');
+                    return {
+                        id: cb.value,
+                        koleksiyon: cb.dataset.koleksiyon,
+                        yil: row.querySelector('td:nth-child(3)').textContent,
+                        ay: row.querySelector('td:nth-child(4)').textContent.toLowerCase()
+                    };
+                });
+
+                fetch('{% url "yonetici:toplu_veri_sil" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify({ veriler: silinecekler })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert('Hata: ' + (data.error || 'Bilinmeyen hata'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Hata:', error);
+                    alert('İşlem sırasında bir hata oluştu');
+                });
+            }
+        }
+    });
+
+    // Silme butonu durumunu kontrol et
+    function kontrolButonDurumu() {
+        var seciliSayi = $('.veri-checkbox:checked').length;
+        $('#topluSilBtn').prop('disabled', seciliSayi === 0);
+        
+        if (seciliSayi > 0) {
+            $('#topluSilBtn').html(`<i class="bi bi-trash"></i> Seçilenleri Sil (${seciliSayi})`);
+        } else {
+            $('#topluSilBtn').html('<i class="bi bi-trash"></i> Seçilenleri Sil');
+        }
+    }
+
+    // Tekli silme işlemi
+    function tekliSil(koleksiyon, id) {
+        if (confirm('Bu veriyi silmek istediğinizden emin misiniz?')) {
+            fetch(`/yonetici/veri-sil/${koleksiyon}/${id}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Satırı tablodan kaldır
+                    document.querySelector(`tr[data-id="${id}"]`).remove();
+                    alert('Veri başarıyla silindi');
+                } else {
+                    alert('Veri silinirken bir hata oluştu: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Hata:', error);
+                alert('Veri silinirken bir hata oluştu');
+            });
+        }
+    }
+
+    function veriGuncelle(event) {
+        event.preventDefault();
+        
+        const form = document.getElementById('guncellemeForm');
+        const formData = new FormData(form);
+        
+        fetch('{% url "yonetici:veri_guncelle" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Başarılı güncelleme
+                alert('Veri başarıyla güncellendi');
+                // Modal'ı kapat
+                const modal = bootstrap.Modal.getInstance(document.getElementById('duzenleModal'));
+                modal.hide();
+                // Sayfayı yenile
+                window.location.reload();
+            } else {
+                // Hata durumu
+                alert('Hata: ' + (data.error || 'Bilinmeyen bir hata oluştu'));
+            }
+        })
+        .catch(error => {
+            console.error('Güncelleme hatası:', error);
+            alert('Güncelleme sırasında bir hata oluştu');
+        });
+    }
+
+    // Düzenleme modalını açma fonksiyonu
+    function duzenleModal(button) {
+        const id = button.dataset.id;
+        const koleksiyon = button.dataset.koleksiyon;
+        const yil = button.dataset.yil;
+        const ay = button.dataset.ay;
+        const veriler = JSON.parse(button.dataset.veriler);
+        
+        document.getElementById('edit_id').value = id;
+        document.getElementById('edit_koleksiyon').value = koleksiyon;
+        document.getElementById('edit_yil').value = yil;
+        document.getElementById('edit_ay').value = ay;
+        
+        // Dinamik alanları doldur
+        const dinamikAlanlar = document.getElementById('dinamikAlanlar');
+        
+        // Koleksiyona göre form alanlarını oluştur
+        switch(koleksiyon) {
+            case 'genel':
+                dinamikAlanlar.innerHTML = `
+                    <h6 class="mb-3">Yerleşim Yeri</h6>
+                    <div class="mb-3">
+                        <label class="form-label">Toplam Kaza Sayısı</label>
+                        <input type="number" class="form-control" name="yerlesim_toplam_kaza" value="${veriler.yerlesim_yeri.toplam_kaza_sayisi}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ölümlü Kaza Sayısı</label>
+                        <input type="number" class="form-control" name="yerlesim_olumlu" value="${veriler.yerlesim_yeri.olumlu_kaza_sayisi}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Yaralanmalı Kaza Sayısı</label>
+                        <input type="number" class="form-control" name="yerlesim_yaralanmali" value="${veriler.yerlesim_yeri.yaralanmali_kaza_sayisi}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Maddi Hasarlı Kaza Sayısı</label>
+                        <input type="number" class="form-control" name="yerlesim_maddi" value="${veriler.yerlesim_yeri.maddi_hasarli_kaza_sayisi}" required>
+                    </div>
+                    
+                    <h6 class="mb-3">Yerleşim Yeri Dışı</h6>
+                    <div class="mb-3">
+                        <label class="form-label">Toplam Kaza Sayısı</label>
+                        <input type="number" class="form-control" name="disi_toplam_kaza" value="${veriler.yerlesim_yeri_disi.toplam_kaza_sayisi}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ölümlü Kaza Sayısı</label>
+                        <input type="number" class="form-control" name="disi_olumlu" value="${veriler.yerlesim_yeri_disi.olumlu_kaza_sayisi}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Yaralanmalı Kaza Sayısı</label>
+                        <input type="number" class="form-control" name="disi_yaralanmali" value="${veriler.yerlesim_yeri_disi.yaralanmali_kaza_sayisi}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Maddi Hasarlı Kaza Sayısı</label>
+                        <input type="number" class="form-control" name="disi_maddi" value="${veriler.yerlesim_yeri_disi.maddi_hasarli_kaza_sayisi}" required>
+                    </div>
+                `;
+                break;
+
+            case 'iller':
+                dinamikAlanlar.innerHTML = `
+                    <div class="mb-3">
+                        <label class="form-label">İl</label>
+                        <input type="text" class="form-control" name="il" value="${veriler.il}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ölümlü/Yaralanmalı Kaza</label>
+                        <input type="number" class="form-control" name="olumlu_yarali_kaza" value="${veriler.olumlu_yarali_kaza}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Maddi Hasarlı Kaza</label>
+                        <input type="number" class="form-control" name="maddi_hasarli_kaza" value="${veriler.maddi_hasarli_kaza}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ölü Sayısı</label>
+                        <input type="number" class="form-control" name="olu_sayisi" value="${veriler.olu_sayisi}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Yaralı Sayısı</label>
+                        <input type="number" class="form-control" name="yarali_sayisi" value="${veriler.yarali_sayisi}" required>
+                    </div>
+                `;
+                break;
+
+            case 'kaza_arac_cinsleri':
+                dinamikAlanlar.innerHTML = `
+                    <div class="mb-3">
+                        <label class="form-label">Araç Cinsi</label>
+                        <input type="text" class="form-control" name="arac_cinsi" value="${veriler.arac_cinsi}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Kaza Sayısı</label>
+                        <input type="number" class="form-control" name="kaza_sayisi" value="${veriler.kaza_sayisi}" required>
+                    </div>
+                `;
+                break;
+
+            case 'kaza_arac_sayisi':
+                dinamikAlanlar.innerHTML = `
+                    <div class="mb-3">
+                        <label class="form-label">Araç Türü</label>
+                        <select class="form-select" name="arac_turu" required>
+                            <option value="Tek Araçlı" ${veriler.arac_turu === 'Tek Araçlı' ? 'selected' : ''}>Tek Araçlı</option>
+                            <option value="İki Araçlı" ${veriler.arac_turu === 'İki Araçlı' ? 'selected' : ''}>İki Araçlı</option>
+                            <option value="Çok Araçlı" ${veriler.arac_turu === 'Çok Araçlı' ? 'selected' : ''}>Çok Araçlı</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Araç Sayısı</label>
+                        <input type="number" class="form-control" name="arac_sayisi" value="${veriler.arac_sayisi}" required>
+                    </div>
+                `;
+                break;
+
+            case 'kaza_olus_turleri':
+                dinamikAlanlar.innerHTML = `
+                    <div class="mb-3">
+                        <label class="form-label">Kaza Oluş Türü</label>
+                        <input type="text" class="form-control" name="kaza_olus_turu" value="${veriler.kaza_olus_turu}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Kaza Sayısı</label>
+                        <input type="number" class="form-control" name="kaza_sayisi" value="${veriler.kaza_sayisi}" required>
+                    </div>
+                `;
+                break;
+
+            case 'kaza_unsurlari':
+                dinamikAlanlar.innerHTML = `
+                    <div class="mb-3">
+                        <label class="form-label">Kaza Unsuru</label>
+                        <input type="text" class="form-control" name="kaza_unsuru" value="${veriler.kaza_unsuru}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Kusur Sayısı</label>
+                        <input type="number" class="form-control" name="kusur_sayisi" value="${veriler.kusur_sayisi}" required>
+                    </div>
+                `;
+                break;
+
+            case 'surucu_kusurlari':
+                dinamikAlanlar.innerHTML = `
+                    <div class="mb-3">
+                        <label class="form-label">Sürücü Kusuru</label>
+                        <input type="text" class="form-control" name="kusur_turu" value="${veriler.kusur_turu}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Kusur Sayısı</label>
+                        <input type="number" class="form-control" name="kusur_sayisi" value="${veriler.kusur_sayisi}" required>
+                    </div>
+                `;
+                break;
+
+            case 'trafik_cezalari':
+                dinamikAlanlar.innerHTML = `
+                    <div class="mb-3">
+                        <label class="form-label">Ceza Türü</label>
+                        <input type="text" class="form-control" name="ceza_turu" value="${veriler.ceza_turu}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ceza Sayısı</label>
+                        <input type="number" class="form-control" name="ceza_sayisi" value="${veriler.ceza_sayisi}" required>
+                    </div>
+                `;
+                break;
+        }
+        
+        // Modalı göster
+        const modal = new bootstrap.Modal(document.getElementById('duzenleModal'));
+        modal.show();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Koleksiyon seçildiğinde dosya seçimini etkinleştir
+        document.getElementById('json_koleksiyon').addEventListener('change', function() {
+            const koleksiyon = this.value;
+            const dosyaInput = document.getElementById('json_files');
+            const uploadButton = document.getElementById('uploadButton');
+            
+            dosyaInput.disabled = !koleksiyon;
+            if (!koleksiyon) {
+                dosyaInput.value = '';
+                uploadButton.disabled = true;
+                document.getElementById('selectedFiles').innerHTML = '';
+            }
+        });
+
+        // Dosya seçildiğinde seçilen dosyaları listele
+        document.getElementById('json_files').addEventListener('change', function(e) {
+            const selectedFiles = document.getElementById('selectedFiles');
+            const uploadButton = document.getElementById('uploadButton');
+            
+            selectedFiles.innerHTML = '';
+            if (this.files.length > 0) {
+                const fileList = document.createElement('div');
+                fileList.className = 'list-group mt-3';
+                
+                Array.from(this.files).forEach((file, index) => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                    fileItem.innerHTML = `
+                        <div>
+                            <i class="bi bi-file-earmark-text me-2"></i>
+                            <span>${file.name}</span>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">${(file.size / 1024).toFixed(2)} KB</span>
+                    `;
+                    fileList.appendChild(fileItem);
+                });
+                
+                selectedFiles.appendChild(fileList);
+                uploadButton.disabled = false;
+            } else {
+                uploadButton.disabled = true;
+            }
+        });
+
+        // Yıl veya ay değiştiğinde formu otomatik submit et
+        document.getElementById('yil').addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
+        });
+        
+        document.getElementById('ay').addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
+        });
+
+        document.getElementById('filter_koleksiyon').addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
+        });
+
+        // URL'de parametre yoksa formu submit et
+        const urlParams = new URLSearchParams(window.location.search);
+        if (!urlParams.has('yil') && !urlParams.has('ay')) {
+            document.getElementById('filterForm').submit();
+        }
+    });
+
+    // Global fonksiyonlar
+    function formReset() {
+        document.getElementById('jsonUploadForm').reset();
+        document.getElementById('json_files').disabled = true;
+        document.getElementById('uploadButton').disabled = true;
+        document.getElementById('selectedFiles').innerHTML = '';
+    }
+
+    function tumunuSecDegistir(checkbox) {
+        const tumCheckboxlar = document.querySelectorAll('.veri-sec');
+        tumCheckboxlar.forEach(cb => cb.checked = checkbox.checked);
+        document.getElementById('topluSilBtn').disabled = !checkbox.checked;
+    }
+
+    function topluSil() {
+        const secilenler = document.querySelectorAll('.veri-sec:checked');
+        if (secilenler.length === 0) {
+            alert('Lütfen silinecek verileri seçin');
+            return;
+        }
+
+        if (confirm(`${secilenler.length} veriyi silmek istediğinizden emin misiniz?`)) {
+            const silinecekler = Array.from(secilenler).map(cb => {
+                const row = cb.closest('tr');
+                return {
+                    id: cb.value,
+                    koleksiyon: cb.dataset.koleksiyon,
+                    yil: row.querySelector('td:nth-child(3)').textContent,
+                    ay: row.querySelector('td:nth-child(4)').textContent.toLowerCase()
+                };
+            });
+
+            // URL'yi düzelttik
+            fetch('{% url "yonetici:toplu_veri_sil" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({ veriler: silinecekler })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Hata: ' + (data.error || 'Bilinmeyen hata'));
+                }
+            })
+            .catch(error => {
+                console.error('Hata:', error);
+                alert('İşlem sırasında bir hata oluştu');
+            });
+        }
+    }
+
+    // Sayfa yüklendiğinde çalışacak kodlar
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tüm checkbox'ları dinle
+        document.querySelectorAll('.veri-sec, #tumunuSec').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const secilenler = document.querySelectorAll('.veri-sec:checked');
+                const topluSilBtn = document.getElementById('topluSilBtn');
+                topluSilBtn.disabled = secilenler.length === 0;
+            });
+        });
+    });
+
+    // Form submit edildiğinde çalışacak fonksiyon
+    document.getElementById('veriEkleForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const koleksiyon = formData.get('koleksiyon');
+        
+        // Ay değerini Türkçe karakterlerden arındır
+        const ayTurkce = formData.get('ay');
+        const ayIngilizce = ayTurkce.toLowerCase()
+            .replace('ş', 's')
+            .replace('ı', 'i')
+            .replace('ğ', 'g')
+            .replace('ü', 'u')
+            .replace('ö', 'o')
+            .replace('ç', 'c');
+        
+        let veriData = {
+            yil: parseInt(formData.get('yil')),
+            ay: ayIngilizce,  // Türkçe karaktersiz ay değerini kullan
+            veriler: {}
+        };
+        
+        // Koleksiyona göre veri yapısını oluştur
+        if (koleksiyon === 'genel') {
+            veriData.veriler = {
+                yerlesim_yeri: {
+                    toplam_kaza_sayisi: parseInt(formData.get('yerlesim_toplam_kaza')),
+                    olumlu_kaza_sayisi: parseInt(formData.get('yerlesim_olumlu')),
+                    yaralanmali_kaza_sayisi: parseInt(formData.get('yerlesim_yaralanmali')),
+                    maddi_hasarli_kaza_sayisi: parseInt(formData.get('yerlesim_maddi'))
+                },
+                yerlesim_yeri_disi: {
+                    toplam_kaza_sayisi: parseInt(formData.get('disi_toplam_kaza')),
+                    olumlu_kaza_sayisi: parseInt(formData.get('disi_olumlu')),
+                    yaralanmali_kaza_sayisi: parseInt(formData.get('disi_yaralanmali')),
+                    maddi_hasarli_kaza_sayisi: parseInt(formData.get('disi_maddi'))
+                }
+            };
+        } else if (koleksiyon === 'iller') {
+            veriData.veriler = {
+                il: formData.get('il'),
+                olumlu_yarali_kaza: parseInt(formData.get('olumlu_yarali_kaza')),
+                maddi_hasarli_kaza: parseInt(formData.get('maddi_hasarli_kaza')),
+                olu_sayisi: parseInt(formData.get('olu_sayisi')),
+                yarali_sayisi: parseInt(formData.get('yarali_sayisi'))
+            };
+        } else if (koleksiyon === 'kaza_arac_cinsleri') {
+            veriData.veriler = {
+                arac_cinsi: formData.get('arac_cinsi'),
+                kaza_sayisi: parseInt(formData.get('kaza_sayisi'))
+            };
+        } else if (koleksiyon === 'kaza_olus_turleri') {
+            veriData.veriler = {
+                kaza_olus_turu: formData.get('kaza_olus_turu'),
+                kaza_sayisi: parseInt(formData.get('kaza_sayisi'))
+            };
+        } else if (koleksiyon === 'kaza_unsurlari') {
+            veriData.veriler = {
+                kaza_unsuru: formData.get('kaza_unsuru'),
+                kusur_sayisi: parseInt(formData.get('kusur_sayisi'))
+            };
+        } else if (koleksiyon === 'surucu_kusurlari') {
+            veriData.veriler = {
+                surucu_kusuru: formData.get('surucu_kusuru'),
+                kusur_sayisi: parseInt(formData.get('kusur_sayisi'))
+            };
+        } else if (koleksiyon === 'trafik_cezalari') {
+            veriData.veriler = {
+                ceza_turu: formData.get('ceza_turu'),
+                ceza_sayisi: parseInt(formData.get('ceza_sayisi'))
+            };
+        } else if (koleksiyon === 'kaza_arac_sayisi') {
+            veriData.veriler = {
+                arac_turu: formData.get('arac_turu'),
+                arac_sayisi: parseInt(formData.get('arac_sayisi'))
+            };
+        }
+        
+        // AJAX isteği gönder
+        fetch('/yonetici/veri-ekle/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                koleksiyon: koleksiyon,
+                veri: veriData
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Veri başarıyla eklendi');
+                location.reload();
+            } else {
+                alert('Hata: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Hata:', error);
+            alert('Bir hata oluştu');
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Yıl değiştiğinde formu otomatik submit et
+        document.getElementById('yil').addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
+        });
+        
+        // Koleksiyon değiştiğinde formu submit et
+        document.getElementById('filter_koleksiyon').addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
+        });
+        
+        // Ay değiştiğinde formu submit et
+        document.getElementById('ay').addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
+        });
+    });
+
+    // Koleksiyon değiştiğinde çalışacak fonksiyon
+    function koleksiyonDegisti() {
+        const koleksiyon = document.getElementById('koleksiyon').value;
+        const dinamikFormAlanlari = document.getElementById('dinamikFormAlanlari');
+        const koleksiyonAlanlari = document.getElementById('koleksiyonAlanlari');
+        
+        if (!koleksiyon) {
+            dinamikFormAlanlari.style.display = 'none';
+            return;
+        }
+        
+        dinamikFormAlanlari.style.display = 'block';
+        
+        // Koleksiyona göre form alanlarını oluştur
+        switch(koleksiyon) {
+            case 'genel':
+                koleksiyonAlanlari.innerHTML = `
+                    <h6 class="mb-3">Yerleşim Yeri</h6>
+                    <div class="mb-3">
+                        <label class="form-label">Toplam Kaza Sayısı</label>
+                        <input type="number" class="form-control" name="yerlesim_toplam_kaza" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ölümlü Kaza Sayısı</label>
+                        <input type="number" class="form-control" name="yerlesim_olumlu" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Yaralanmalı Kaza Sayısı</label>
+                        <input type="number" class="form-control" name="yerlesim_yaralanmali" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Maddi Hasarlı Kaza Sayısı</label>
+                        <input type="number" class="form-control" name="yerlesim_maddi" required>
+                    </div>
+                    
+                    <h6 class="mb-3">Yerleşim Yeri Dışı</h6>
+                    <div class="mb-3">
+                        <label class="form-label">Toplam Kaza Sayısı</label>
+                        <input type="number" class="form-control" name="disi_toplam_kaza" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ölümlü Kaza Sayısı</label>
+                        <input type="number" class="form-control" name="disi_olumlu" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Yaralanmalı Kaza Sayısı</label>
+                        <input type="number" class="form-control" name="disi_yaralanmali" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Maddi Hasarlı Kaza Sayısı</label>
+                        <input type="number" class="form-control" name="disi_maddi" required>
+                    </div>
+                `;
+                break;
+            
+            case 'iller':
+                koleksiyonAlanlari.innerHTML = `
+                    <div class="mb-3">
+                        <label class="form-label">İl</label>
+                        <input type="text" class="form-control" name="il" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ölümlü/Yaralanmalı Kaza</label>
+                        <input type="number" class="form-control" name="olumlu_yarali_kaza" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Maddi Hasarlı Kaza</label>
+                        <input type="number" class="form-control" name="maddi_hasarli_kaza" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ölü Sayısı</label>
+                        <input type="number" class="form-control" name="olu_sayisi" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Yaralı Sayısı</label>
+                        <input type="number" class="form-control" name="yarali_sayisi" required>
+                    </div>
+                `;
+                break;
+            
+            case 'kaza_arac_cinsleri':
+                koleksiyonAlanlari.innerHTML = `
+                    <div class="mb-3">
+                        <label class="form-label">Araç Cinsi</label>
+                        <input type="text" class="form-control" name="arac_cinsi" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Kaza Sayısı</label>
+                        <input type="number" class="form-control" name="kaza_sayisi" required>
+                    </div>
+                `;
+                break;
+            
+            case 'kaza_arac_sayisi':
+                koleksiyonAlanlari.innerHTML = `
+                    <div class="mb-3">
+                        <label class="form-label">Araç Türü</label>
+                        <select class="form-select" name="arac_turu" required>
+                            <option value="">Seçiniz...</option>
+                            <option value="Tek Araçlı">Tek Araçlı</option>
+                            <option value="İki Araçlı">İki Araçlı</option>
+                            <option value="Çok Araçlı">Çok Araçlı</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Araç Sayısı</label>
+                        <input type="number" class="form-control" name="arac_sayisi" required>
+                    </div>
+                `;
+                break;
+            
+            case 'kaza_olus_turleri':
+                koleksiyonAlanlari.innerHTML = `
+                    <div class="mb-3">
+                        <label class="form-label">Kaza Oluş Türü</label>
+                        <input type="text" class="form-control" name="kaza_olus_turu" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Kaza Sayısı</label>
+                        <input type="number" class="form-control" name="kaza_sayisi" required>
+                    </div>
+                `;
+                break;
+            
+            case 'kaza_unsurlari':
+                koleksiyonAlanlari.innerHTML = `
+                    <div class="mb-3">
+                        <label class="form-label">Kaza Unsuru</label>
+                        <input type="text" class="form-control" name="kaza_unsuru" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Kusur Sayısı</label>
+                        <input type="number" class="form-control" name="kusur_sayisi" required>
+                    </div>
+                `;
+                break;
+            
+            case 'surucu_kusurlari':
+                koleksiyonAlanlari.innerHTML = `
+                    <div class="mb-3">
+                        <label class="form-label">Sürücü Kusuru</label>
+                        <input type="text" class="form-control" name="kusur_turu" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Kusur Sayısı</label>
+                        <input type="number" class="form-control" name="kusur_sayisi" required>
+                    </div>
+                `;
+                break;
+            
+            case 'trafik_cezalari':
+                koleksiyonAlanlari.innerHTML = `
+                    <div class="mb-3">
+                        <label class="form-label">Ceza Türü</label>
+                        <input type="text" class="form-control" name="ceza_turu" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ceza Sayısı</label>
+                        <input type="number" class="form-control" name="ceza_sayisi" required>
+                    </div>
+                `;
+                break;
+        }
+    }
+
+    // Sayfa yüklendiğinde koleksiyon select'ine event listener ekle
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('koleksiyon').addEventListener('change', koleksiyonDegisti);
+    });
+</script>
+</body>
+</html> 

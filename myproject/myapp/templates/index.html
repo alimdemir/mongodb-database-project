@@ -1,0 +1,750 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anasayfa - TTKA</title>
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+
+  <!-- Favicons -->
+  <link href="{% static 'img/favicon.png' %}" rel="icon">
+  <link href="{% static 'img/apple-touch-icon.png' %}" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/aos/aos.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/glightbox/css/glightbox.min.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/swiper/swiper-bundle.min.css' %}" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+
+  <!-- Graphic -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Harita için gerekli CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- D3.js için gerekli CSS ve JS -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+
+
+
+  <style>
+    /* CSS ayarları */
+    body { font-family: Arial, sans-serif; background-color: #f4f4f9; }
+    h1 { text-align: center; margin: 20px; }
+    table { width: 90%; margin: 20px auto; border-collapse: collapse; background-color: #fff; }
+    th, td { padding: 10px; text-align: center; border: 1px solid #ddd; }
+    th { background-color: #4CAF50; color: white; }
+    tr:nth-child(even) { background-color: #f2f2f2; }
+    
+    /* Grafik boyutları */
+    .chart-container {
+        width: 80%;
+        margin: 40px auto;
+    }
+
+    canvas {
+        display: block;
+        max-width: 100%;
+        height: 500px; /* Grafik yüksekliği arttırıldı */
+        width: 800px;  /* Grafik genişliği arttırıldı */
+    }
+
+
+    /* Admin Panel Styles */
+    #admin-panel {
+        padding: 60px 0;
+        background-color: #f8f9fa;
+    }
+
+    .admin-card {
+        padding: 20px;
+        border-radius: 8px;
+        background: white;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+    .admin-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .admin-card h5 {
+        color: #2f4d5a;
+        margin-bottom: 15px;
+        font-weight: 600;
+    }
+
+    .admin-card p {
+        color: #6c757d;
+        margin-bottom: 20px;
+    }
+
+    .admin-card .btn-primary {
+        background-color: #2f4d5a;
+        border-color: #2f4d5a;
+        padding: 8px 20px;
+        transition: all 0.3s ease;
+    }
+
+    .admin-card .btn-primary:hover {
+        background-color: #253b45;
+        border-color: #253b45;
+        transform: translateY(-2px);
+    }
+
+    .card-header {
+        background-color: #2f4d5a !important;
+        border-bottom: 0;
+        padding: 1rem 1.5rem;
+    }
+
+    .card-header h4 {
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .admin-badge {
+        background-color: #28a745;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.8em;
+        margin-left: 5px;
+    }
+
+    .admin-indicator {
+        background-color: #28a745;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.8em;
+        margin-left: auto;
+    }
+
+    .dropdown-menu .admin-indicator {
+        display: inline-block;
+    }
+
+    .il-path {
+        fill: #e0e0e0;
+        stroke: #ffffff;
+        stroke-width: 0.5;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+    .il-path:hover {
+        filter: brightness(85%);
+        stroke-width: 1.5;
+    }
+
+    .tooltip {
+        position: absolute;
+        padding: 15px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        pointer-events: none;
+        opacity: 0;
+        z-index: 1000;
+        min-width: 250px;
+        text-align: center;
+    }
+
+    .tooltip .il-adi {
+        font-size: 18px;
+        font-weight: bold;
+        color: #2f4d5a;
+        margin-bottom: 10px;
+        padding-bottom: 5px;
+        border-bottom: 2px solid #2f4d5a;
+    }
+
+    .tooltip .il-veri {
+        font-size: 14px;
+        color: #666;
+        margin: 5px 0;
+        text-align: left;
+        padding-left: 10px;
+    }
+
+    .il-veri-son-ay {
+        background: #e3f2fd;
+    }
+
+    .il-veri-son-ay .il-veri-baslik {
+        color: #1976d2;
+    }
+
+    /* Renk skalası için gösterge */
+    .legend {
+        position: absolute;
+        bottom: 30px;
+        right: 30px;
+        background: white;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        font-size: 12px;
+        font-family: Arial, sans-serif;
+    }
+
+    .legend rect {
+        stroke: #ccc;
+        stroke-width: 0.5;
+    }
+
+    #turkiyeHaritasi {
+        width: 100%;
+        height: 800px; /* Yüksekliği küçülttük */
+        position: relative;
+    }
+
+    #turkiyeHaritasi svg {
+        width: 100%;
+        height: 100%;
+        max-width: 1400px; /* Maksimum genişliği küçülttük */
+        margin: 0 auto;
+    }
+
+    /* Harita stilleri */
+    #map-section {
+        padding: 0;
+        width: 100vw;
+        height: 100vh; /* Tam ekran yükseklik */
+        position: relative;
+        left: 50%;
+        right: 50%;
+        margin-left: -50vw;
+        margin-right: -50vw;
+        margin-top: 4rem; /* Header'ın altında kalması için */
+        margin-bottom: 2rem;
+    }
+
+    #turkiyeHaritasi {
+        width: 100%;
+        height: calc(100vh - 6rem); /* Header ve margin'leri çıkarıyoruz */
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+    }
+
+    #turkiyeHaritasi svg {
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        max-height: none;
+    }
+  </style>
+</head>
+
+<body class="index-page">
+
+  <header id="header" class="header d-flex align-items-center fixed-top">
+    <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+
+      <a href="index.html" class="logo d-flex align-items-center">
+        <!-- Uncomment the line below if you also wish to use an image logo -->
+        <!-- <img src="assets/img/logo.png" alt=""> -->
+        <h1 class="sitename">TTKA</h1>
+      </a>
+
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="#hero" class="active">Anasayfa</a></li>
+          <li><a href="{% url 'turkiye_geneli' %}">Türkiye Geneli</a></li>
+          <li><a href="{% url 'iller' %}">İller</a></li>
+          <li><a href="{% url 'olumlu_yaralanmali' %}">Ölümlü-Yaralanmalı Kazalar</a></li>
+          <li><a href="{% url 'ceza' %}">Trafik Cezaları</a></li>
+          <li><a href="{% url 'hakkinda' %}">Hakkında</a></li>
+
+          <!-- Sağ taraftaki hesap menüsü -->
+          {% if user_data.is_authenticated %}
+            <li class="nav-item dropdown ms-auto">
+              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-person-circle me-1"></i>
+                {{ user_data.username }}
+                {% if user_data.username == 'alim' %}
+                  <span class="admin-badge">Yönetici</span>
+                {% endif %}
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profilim</a></li>
+                {% if user_data.username == 'alim' %}
+                  <li>
+                    <a class="dropdown-item d-flex align-items-center" href="{% url 'yonetici:panel' %}">
+                      <i class="bi bi-shield-lock me-2"></i>
+                      Yönetici Paneli
+                      <span class="admin-indicator">Yönetici</span>
+                    </a>
+                  </li>
+                {% endif %}
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{% url 'cikis' %}"><i class="bi bi-box-arrow-right me-2"></i>Çıkış Yap</a></li>
+              </ul>
+            </li>
+          {% else %}
+            <li class="ms-auto"><a href="{% url 'giris' %}">Giriş Yap</a></li>
+            <li><a href="{% url 'kayit' %}">Kayıt Ol</a></li>
+          {% endif %}
+        </ul>
+        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      </nav>
+
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- Hero Section -->
+    <section id="hero" class="hero section accent-background">
+
+      <img src="{% static 'img/hero-bg.jpg' %}" alt="" data-aos="fade-in">
+
+      <div class="container text-center" data-aos="fade-up" data-aos-delay="100">
+        <h2>TÜRKİYE KARAYOLU TRAFİK KAZALARI ANALİZİ</h2>
+        
+        <a href="#about" class="btn-scroll" title="Scroll Down"><i class="bi bi-chevron-down"></i></a>
+      </div>
+
+    </section>
+
+    <!-- Map Section -->
+    <section id="map-section">
+      <div class="container section-title" data-aos="fade-up">
+        <h2>TÜRKİYE TRAFİK KAZA ISI HARİTASI</h2>
+        <p class="text-muted">2024 - ARALIK</p>
+      </div>
+      <div id="turkiyeHaritasi">
+        <!-- Harita buraya gelecek -->
+      </div>
+    </section>
+
+    <!-- Harita JavaScript kodu -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Anasayfa menü linkini her zaman aktif tut
+        if (document.body.classList.contains('index-page')) {
+            const anasayfaLink = document.querySelector('.navmenu li:first-child a');
+            anasayfaLink.classList.add('active');
+            
+            // Scroll event'ini dinle
+            window.addEventListener('scroll', function() {
+                // Scroll pozisyonundan bağımsız olarak aktif sınıfını koru
+                anasayfaLink.classList.add('active');
+            });
+        }
+
+        // SVG boyutları - Ekran boyutuna göre ayarla
+        const container = document.getElementById('turkiyeHaritasi');
+        const width = container.offsetWidth;
+        const height = container.offsetHeight;
+        
+        // Projeksiyon değişkenini global scope'a taşı
+        let projection = null;
+
+        // SVG oluştur
+        const svg = d3.select('#turkiyeHaritasi')
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height)
+            .attr('viewBox', `0 0 ${width} ${height}`)
+            .attr('preserveAspectRatio', 'xMidYMid meet');
+
+        // Tooltip
+        const tooltip = d3.select('body').append('div')
+            .attr('class', 'tooltip')
+            .style('opacity', 0);
+
+        // İl verilerini al
+        fetch('/get-il-kaza-verileri/')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const ilVerileri = data.il_verileri;
+                    
+                    // Haritayı yükle
+                    d3.json("{% static 'js/turkiye.json' %}")
+                        .then(function(mapData) {
+                            // Projeksiyon ayarla
+                            projection = d3.geoMercator()
+                                .center([35, 39])
+                                .scale(Math.min(width * 3, height * 5))
+                                .translate([width / 2, height / 2]);
+                            
+                            const path = d3.geoPath().projection(projection);
+                            
+                            // Renk skalası oluştur
+                            const colorScale = d3.scaleThreshold()
+                                .domain([100, 500, 2000, 4000, 7000, 9000])
+                                .range([
+                                    "#e3f2fd",  // 0-100 (en açık mavi)
+                                    "#c8e3f7",  // 100-500
+                                    "#9cc7e8",  // 500-2000
+                                    "#6faad5",  // 2000-4000
+                                    "#447d9e",  // 4000-7000
+                                    "#2f4d5a"   // 7000-9000+ (en koyu mavi)
+                                ]);
+                            
+                            // İlleri çiz
+                            svg.selectAll('path')
+                                .data(mapData.features)
+                                .enter()
+                                .append('path')
+                                .attr('d', path)
+                                .attr('class', 'il-path')
+                                .attr('id', d => `il-${d.properties.name}`)
+                                .style('fill', function(d) {
+                                    // İl adını standardize et ve verileri kontrol et
+                                    const standardizedName = standardizeMapName(d.properties.name);
+                                    const il = ilVerileri[standardizedName];
+                                    return il ? colorScale(il.toplam_kaza) : '#f5f5f5';
+                                })
+                                .on('mouseover', function(event, d) {
+                                    const standardizedName = standardizeMapName(d.properties.name);
+                                    const il = ilVerileri[standardizedName];
+                                    
+                                    tooltip.transition()
+                                        .duration(200)
+                                        .style('opacity', 1)
+                                        .style('display', 'block');
+                                    
+                                    tooltip.html(`
+                                        <div class="il-adi">${d.properties.name}</div>
+                                        ${il ? `
+                                            <div class="il-veri">Toplam Kaza: ${il.toplam_kaza}</div>
+                                            <div class="il-veri">Ölümlü/Yaralanmalı: ${il.olumlu_yarali_kaza}</div>
+                                            <div class="il-veri">Maddi Hasarlı: ${il.maddi_hasarli_kaza}</div>
+                                            <div class="il-veri">Ölü Sayısı: ${il.olu_sayisi}</div>
+                                            <div class="il-veri">Yaralı Sayısı: ${il.yarali_sayisi}</div>
+                                        ` : '<div class="il-veri" style="color: #999; font-style: italic;">Bu il için veri bulunmamaktadır</div>'}
+                                    `)
+                                    .style('left', (event.pageX + 10) + 'px')
+                                    .style('top', (event.pageY - 10) + 'px');
+                                    
+                                    d3.select(this)
+                                        .style('filter', 'brightness(85%)');
+                                })
+                                .on('mouseout', function() {
+                                    tooltip.transition()
+                                        .duration(500)
+                                        .style('opacity', 0)
+                                        .style('display', 'none');
+                                    
+                                    d3.select(this)
+                                        .style('filter', 'none');
+                                });
+
+                            // Renk skalası göstergesi ekle
+                            const legend = svg.append('g')
+                                .attr('class', 'legend')
+                                .attr('transform', `translate(${width - 200}, ${height - 400})`);
+
+                            const legendData = [
+                                "0-100",
+                                "100-500",
+                                "500-2000",
+                                "2000-4000",
+                                "4000-7000",
+                                "7000-9000+"
+                            ];
+
+                            legend.selectAll('rect')
+                                .data(legendData)
+                                .enter()
+                                .append('rect')
+                                .attr('x', -30)
+                                .attr('y', (d, i) => i * 30)
+                                .attr('width', 30)
+                                .attr('height', 25)
+                                .style('fill', (d, i) => colorScale.range()[i]);
+
+                            // Etiketleri ekle
+                            legend.selectAll('text')
+                                .data(legendData)
+                                .enter()
+                                .append('text')
+                                .attr('x', 10)
+                                .attr('y', (d, i) => i * 30 + 17)
+                                .style('font-size', '12px')
+                                .text(d => d + " kaza");
+                        });
+                }
+            })
+            .catch(error => console.error('Harita verilerini yüklerken hata:', error));
+
+        // Pencere boyutu değiştiğinde haritayı yeniden boyutlandır
+        window.addEventListener('resize', function() {
+            if (!projection) return; // Projeksiyon henüz oluşturulmadıysa çık
+            
+            const newWidth = container.offsetWidth;
+            const newHeight = container.offsetHeight;
+            
+            svg.attr('width', newWidth)
+               .attr('height', newHeight)
+               .attr('viewBox', `0 0 ${newWidth} ${newHeight}`);
+            
+            // Projeksiyon ve legend pozisyonunu güncelle
+            projection.translate([newWidth / 2, newHeight / 2])
+                     .scale(Math.min(newWidth * 3, newHeight * 5));
+        });
+    });
+
+    // SVG oluştur kısmından sonra, harita verilerini yüklemeden önce şu fonksiyonu ekleyelim
+    function standardizeMapName(name) {
+        // Harita dosyasındaki il adlarını veritabanındaki formata çevir
+        if (!name) return '';
+        
+        // Özel durumlar için mapping
+        const specialCases = {
+            'AFYON': 'AFYONKARAHISAR',
+            'İÇEL': 'MERSIN'
+        };
+
+        name = name.toUpperCase()
+            .replace(/İ/g, 'I')
+            .replace(/Ğ/g, 'G')
+            .replace(/Ü/g, 'U')
+            .replace(/Ş/g, 'S')
+            .replace(/Ö/g, 'O')
+            .replace(/Ç/g, 'C')
+            .replace(/ı/g, 'I')
+            .replace(/ğ/g, 'G')
+            .replace(/ü/g, 'U')
+            .replace(/ş/g, 'S')
+            .replace(/ö/g, 'O')
+            .replace(/ç/g, 'C');
+
+        // Özel durumları kontrol et
+        return specialCases[name] || name;
+    }
+    </script>
+
+    
+    <section id="about" class="about section">
+      <div class="container">
+        <!-- Kaza İstatistikleri Tablosu -->
+        <div class="row mb-5">
+          <div class="col-12">
+            <div class="card shadow">
+              <div class="card-header bg-primary text-white">
+                <h3 class="card-title mb-0">{{ kaza_verileri.yil }} - {{ kaza_verileri.ay }} Ayı Türkiye Geneli Trafik Kaza İstatistikleri</h3>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Bölge / Veri Türü</th>
+                        <th>Toplam Kaza</th>
+                        <th>Ölümlü Kaza</th>
+                        <th>Yaralanmalı Kaza</th>
+                        <th>Maddi Hasarlı Kaza</th>
+                        <th>Ölü Sayısı</th>
+                        <th>Yaralı Sayısı</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- Yerleşim Yeri -->
+                      <tr>
+                        <td><strong>Yerleşim Yeri</strong></td>
+                        <td>{{ kaza_verileri.yerlesim_yeri.toplam_kaza_sayisi|default:0 }}</td>
+                        <td>{{ kaza_verileri.yerlesim_yeri.olumlu_kaza_sayisi|default:0 }}</td>
+                        <td>{{ kaza_verileri.yerlesim_yeri.yaralanmali_kaza_sayisi|default:0 }}</td>
+                        <td>{{ kaza_verileri.yerlesim_yeri.maddi_hasarli_kaza_sayisi|default:0 }}</td>
+                        <td>{{ kaza_verileri.yerlesim_yeri.olu_sayisi|default:0 }}</td>
+                        <td>{{ kaza_verileri.yerlesim_yeri.yarali_sayisi|default:0 }}</td>
+                      </tr>
+                      <!-- Yerleşim Yeri Dışı -->
+                      <tr>
+                        <td><strong>Yerleşim Yeri Dışı</strong></td>
+                        <td>{{ kaza_verileri.yerlesim_yeri_disi.toplam_kaza_sayisi|default:0 }}</td>
+                        <td>{{ kaza_verileri.yerlesim_yeri_disi.olumlu_kaza_sayisi|default:0 }}</td>
+                        <td>{{ kaza_verileri.yerlesim_yeri_disi.yaralanmali_kaza_sayisi|default:0 }}</td>
+                        <td>{{ kaza_verileri.yerlesim_yeri_disi.maddi_hasarli_kaza_sayisi|default:0 }}</td>
+                        <td>{{ kaza_verileri.yerlesim_yeri_disi.olu_sayisi|default:0 }}</td>
+                        <td>{{ kaza_verileri.yerlesim_yeri_disi.yarali_sayisi|default:0 }}</td>
+                      </tr>
+                      <!-- Toplam -->
+                      <tr class="table-primary">
+                        <td><strong>TOPLAM</strong></td>
+                        <td><strong>{{ kaza_verileri.toplam.toplam_kaza_sayisi|default:0 }}</strong></td>
+                        <td><strong>{{ kaza_verileri.toplam.olumlu_kaza_sayisi|default:0 }}</strong></td>
+                        <td><strong>{{ kaza_verileri.toplam.yaralanmali_kaza_sayisi|default:0 }}</strong></td>
+                        <td><strong>{{ kaza_verileri.toplam.maddi_hasarli_kaza_sayisi|default:0 }}</strong></td>
+                        <td><strong>{{ kaza_verileri.toplam.olu_sayisi|default:0 }}</strong></td>
+                        <td><strong>{{ kaza_verileri.toplam.yarali_sayisi|default:0 }}</strong></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+    </section>
+
+
+    <!-- Stats Section -->
+    <section id="stats" class="stats section light-background">
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+        <div class="container section-title" data-aos="fade-up">
+          <h2>EN FAZLA TRAFİK KAZASI OLAN İL</h2>
+          <p class="city-name">İSTANBUL</p>
+          <p class="text-muted">{{ kaza_verileri.yil }} - {{ kaza_verileri.ay }}</p>
+        </div>
+
+        <div class="row gy-4">
+          <div class="col-lg-3 col-md-6">
+            <div class="stats-item">
+              <i class="bi bi-car-front"></i>
+              <span data-purecounter-start="0" 
+                    data-purecounter-end="{{ en_fazla_kazali_il.toplam_kaza }}" 
+                    data-purecounter-duration="1" 
+                    class="purecounter"></span>
+              <p><strong>Toplam Kaza</strong></p>
+            </div>
+          </div>
+
+          <div class="col-lg-3 col-md-6">
+            <div class="stats-item">
+              <i class="bi bi-exclamation-triangle"></i>
+              <span data-purecounter-start="0" 
+                    data-purecounter-end="{{ en_fazla_kazali_il.olumlu_yarali_kaza }}" 
+                    data-purecounter-duration="1" 
+                    class="purecounter"></span>
+              <p><strong>Ölümlü-Yaralanmalı Kaza</strong></p>
+            </div>
+          </div>
+
+          <div class="col-lg-2 col-md-6">
+            <div class="stats-item">
+              <i class="bi bi-tools"></i>
+              <span data-purecounter-start="0" 
+                    data-purecounter-end="{{ en_fazla_kazali_il.maddi_hasarli_kaza }}" 
+                    data-purecounter-duration="1" 
+                    class="purecounter"></span>
+              <p><strong>Maddi Hasarlı Kaza</strong></p>
+            </div>
+          </div>
+
+          <div class="col-lg-2 col-md-6">
+            <div class="stats-item">
+              <i class="bi bi-x-lg text-danger"></i>
+              <span data-purecounter-start="0" 
+                    data-purecounter-end="{{ en_fazla_kazali_il.olu_sayisi }}" 
+                    data-purecounter-duration="1" 
+                    class="purecounter"></span>
+              <p><strong>Ölü Sayısı</strong></p>
+            </div>
+          </div>
+
+          <div class="col-lg-2 col-md-6">
+            <div class="stats-item">
+              <i class="bi bi-heart-pulse"></i>
+              <span data-purecounter-start="0" 
+                    data-purecounter-end="{{ en_fazla_kazali_il.yarali_sayisi }}" 
+                    data-purecounter-duration="1" 
+                    class="purecounter"></span>
+              <p><strong>Yaralı Sayısı</strong></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer id="footer" class="footer dark-background">
+
+    <div class="container footer-top">
+      <div class="row gy-4">
+        <div class="col-lg-4 col-md-6 footer-about">
+          <a href="index.html" class="logo d-flex align-items-center">
+            <span class="sitename">TTKA</span>
+          </a>
+          <div class="footer-contact pt-3">
+            <p>Türkiye Trafik Kazaları Analizi</p>
+            <p>Elazığ, Türkiye</p>
+            <p class="mt-3"><strong>İletişim:</strong> <span>info@ttka.com</span></p>
+          </div>
+          <div class="social-links d-flex mt-4">
+            <a href=""><i class="bi bi-twitter-x"></i></a>
+            <a href=""><i class="bi bi-facebook"></i></a>
+            <a href=""><i class="bi bi-instagram"></i></a>
+            <a href=""><i class="bi bi-linkedin"></i></a>
+          </div>
+        </div>
+
+        <div class="col-lg-4 col-md-3 footer-links">
+          <h4>Hızlı Erişim</h4>
+          <ul>
+            <li><a href="{% url 'index' %}">Anasayfa</a></li>
+            <li><a href="{% url 'turkiye_geneli' %}">Türkiye Geneli</a></li>
+            <li><a href="{% url 'iller' %}">İller</a></li>
+            <li><a href="{% url 'olumlu_yaralanmali' %}">Ölümlü-Yaralanmalı Kazalar</a></li>
+            <li><a href="{% url 'ceza' %}">Trafik Cezaları</a></li>
+            <li><a href="{% url 'hakkinda' %}">Hakkında</a></li>
+          </ul>
+        </div>
+
+        <div class="col-lg-4 col-md-3 footer-links">
+          <h4>Veri Kaynakları</h4>
+          <ul>
+            <li><a href="#">EGM Trafik Başkanlığı</a></li>
+            <li><a href="#">TÜİK</a></li>
+            <li><a href="#">Karayolları Genel Müdürlüğü</a></li>
+            <li><a href="#">İçişleri Bakanlığı</a></li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="container copyright text-center mt-4">
+      <p>© <span>2025</span> <strong class="px-1 sitename">TTKA</strong> <span>Tüm Hakları Saklıdır</span></p>
+      <div class="credits">
+        Türkiye Trafik Kazaları Analizi Platformu
+      </div>
+    </div>
+
+  </footer>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'vendor/php-email-form/validate.js' %}"></script>
+  <script src="{% static 'vendor/aos/aos.js' %}"></script>
+  <script src="{% static 'vendor/purecounter/purecounter_vanilla.js' %}"></script>
+  <script src="{% static 'vendor/glightbox/js/glightbox.min.js' %}"></script>
+  <script src="{% static 'vendor/imagesloaded/imagesloaded.pkgd.min.js' %}"></script>
+  <script src="{% static 'vendor/isotope-layout/isotope.pkgd.min.js' %}"></script>
+  <script src="{% static 'vendor/swiper/swiper-bundle.min.js' %}"></script>
+
+  <!-- Main JS File -->
+  <script src="{% static 'js/main.js' %}"></script>
+
+</body>
+
+</html>

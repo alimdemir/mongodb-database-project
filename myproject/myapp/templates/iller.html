@@ -1,0 +1,366 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}İller - TTKA{% endblock %}
+
+{% block extra_css %}
+    <style>
+        /* Admin Panel Styles */
+        .admin-badge {
+            background-color: #28a745;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 5px;
+        }
+        
+        .admin-indicator {
+            background-color: #28a745;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: auto;
+        }
+
+        /* Harita stilleri */
+        #map-section {
+            padding: 0;
+            margin: 50px 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 800px;
+            position: relative;
+            overflow: visible;
+        }
+
+        #turkiyeHaritasi {
+            width: 100%;
+            height: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .il-path {
+            fill: #e0e0e0;
+            stroke: #ffffff;
+            stroke-width: 0.5;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .il-path:hover {
+            filter: brightness(85%);
+            stroke-width: 1.5;
+        }
+
+        .tooltip {
+            position: absolute;
+            padding: 12px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            pointer-events: none;
+            z-index: 1000;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* Page Title Styles */
+        .page-title {
+            background-color: #2f4d5a !important;  /* Menü rengi */
+            padding: 120px 0 60px;
+            position: relative;
+        }
+        
+        .page-title h1 {
+            color: #fff;
+            font-size: 32px;
+            margin-bottom: 15px;
+        }
+        
+        .page-title p {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 0;
+        }
+
+        /* Tablo başlık stili */
+        .table thead th {
+            background-color: #2f4d5a !important;
+            color: white !important;
+            cursor: pointer;
+        }
+
+        /* DataTables sıralama oklarının rengi */
+        table.dataTable thead .sorting:after,
+        table.dataTable thead .sorting_asc:after,
+        table.dataTable thead .sorting_desc:after {
+            color: white !important;
+        }
+
+        /* Tablo stilleri */
+        .table-container {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 0 15px rgba(0,0,0,0.05);
+        }
+
+        .table {
+            margin-bottom: 0;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .table thead th {
+            background-color: #2f4d5a !important;
+            color: white !important;
+            cursor: pointer;
+            border: none !important;
+            padding: 15px;
+        }
+
+        .table thead th:first-child {
+            border-top-left-radius: 15px;
+        }
+
+        .table thead th:last-child {
+            border-top-right-radius: 15px;
+        }
+
+        .table td {
+            border: none;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding: 12px 15px;
+        }
+
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table tbody tr:hover {
+            background-color: rgba(47, 77, 90, 0.05);
+        }
+
+        /* DataTables sıralama oklarının rengi */
+        table.dataTable thead .sorting:after,
+        table.dataTable thead .sorting_asc:after,
+        table.dataTable thead .sorting_desc:after {
+            color: white !important;
+        }
+
+        .table tfoot th {
+            font-weight: bold;
+            background-color: #f8f9fa;
+            border-top: 2px solid #dee2e6;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+{% endblock %}
+
+{% block content %}
+    <main class="main">
+        <!-- Page Title -->
+        <div class="page-title">
+            <div class="container position-relative">
+                <h1>İller Bazında Kaza İstatistikleri</h1>
+                <p>{{ selected_yil }} - {{ selected_ay }} Ayı Verileri</p>
+            </div>
+        </div>
+
+        <!-- Filtreler -->
+        <section class="section mt-5">
+            <div class="container">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="get" class="row g-3 align-items-end">
+                            <div class="col-md-3">
+                                <label for="yil" class="form-label">Yıl</label>
+                                <select name="yil" id="yil" class="form-select">
+                                    <option value="">Tümü</option>
+                                    {% for yil in available_years %}
+                                        <option value="{{ yil }}" {% if yil|stringformat:"i" == selected_yil %}selected{% endif %}>{{ yil }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label for="ay" class="form-label">Ay</label>
+                                <select name="ay" id="ay" class="form-select">
+                                    <option value="">Tümü</option>
+                                    {% for ay in available_months %}
+                                        <option value="{{ ay }}" {% if ay == selected_ay %}selected{% endif %}>{{ ay }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label for="search" class="form-label">İl Ara</label>
+                                <input type="text" name="search" id="search" class="form-control" value="{{ request.GET.search }}" placeholder="İl adı...">
+                            </div>
+                            
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">Filtrele</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tablo -->
+        <section class="section">
+            <div class="container">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-container">
+                            <table id="illerTable" class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Yıl</th>
+                                        <th>Ay</th>
+                                        <th>İl</th>
+                                        <th>Ölümlü-Yaralanmalı Kaza</th>
+                                        <th>Maddi Hasarlı Kaza</th>
+                                        <th>Toplam Kaza</th>
+                                        <th>Ölü Sayısı</th>
+                                        <th>Yaralı Sayısı</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for il in il_verileri %}
+                                        <tr>
+                                            <td>{{ il.yil }}</td>
+                                            <td>{{ il.ay|title }}</td>
+                                            <td>{{ il.veriler.il }}</td>
+                                            <td>{{ il.veriler.olumlu_yarali_kaza|default:0 }}</td>
+                                            <td>{{ il.veriler.maddi_hasarli_kaza|default:0 }}</td>
+                                            <td>{{ il.veriler.olumlu_yarali_kaza|default:0|add:il.veriler.maddi_hasarli_kaza|default:0 }}</td>
+                                            <td>{{ il.veriler.olu_sayisi|default:0 }}</td>
+                                            <td>{{ il.veriler.yarali_sayisi|default:0 }}</td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="8" class="text-center">Veri bulunamadı</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th></th>
+                                        <th></th>
+                                        <th style="text-align:right">Toplam:</th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Harita Bölümü -->
+        <section id="map-section" class="mt-5">
+            <div class="map-container px-0">
+                <div id="turkiyeHaritasi"></div>
+            </div>
+        </section>
+    </main>
+{% endblock %}
+
+{% block extra_js %}
+    <!-- Önce jQuery yükle -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Sonra DataTables -->
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+
+    <!-- DataTables Başlatma -->
+    <script>
+        $(document).ready(function() {
+            var table = $('#illerTable').DataTable({
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.11.5/i18n/tr.json'
+                },
+                ordering: true,
+                order: [[0, 'desc'], [1, 'asc'], [2, 'asc']],
+                paging: false,
+                info: false,
+                searching: false,
+                columnDefs: [
+                    {
+                        targets: [0],
+                        type: 'num'
+                    },
+                    {
+                        targets: [3, 4, 5, 6, 7],
+                        type: 'num'
+                    }
+                ],
+                footerCallback: function(row, data, start, end, display) {
+                    var api = this.api();
+
+                    // Toplam hesaplamaları için sütun indeksleri
+                    var columns = [3, 4, 5, 6, 7];
+
+                    columns.forEach(function(colIndex) {
+                        var total = api
+                            .column(colIndex)
+                            .data()
+                            .reduce(function(a, b) {
+                                return parseInt(a) + parseInt(b);
+                            }, 0);
+
+                        // Binlik ayracı ekle
+                        var formattedTotal = total.toLocaleString('tr-TR');
+                        
+                        // Toplamı footer'a yerleştir
+                        $(api.column(colIndex).footer()).html(formattedTotal);
+                    });
+                }
+            });
+        });
+    </script>
+
+    <!-- Diğer scriptler -->
+    <script>
+        // Filtreleme formunu otomatik submit et
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('yil').addEventListener('change', function() {
+                this.form.submit();
+            });
+            
+            document.getElementById('ay').addEventListener('change', function() {
+                this.form.submit();
+            });
+        });
+        
+        // Harita kodları
+        document.addEventListener('DOMContentLoaded', function() {
+            const ilVerileriJSON = `{
+                {% for il in il_verileri %}
+                    "{{ il.veriler.il|upper|escapejs }}": {
+                        "olumlu_yarali_kaza": {{ il.veriler.olumlu_yarali_kaza|default:0 }},
+                        "maddi_hasarli_kaza": {{ il.veriler.maddi_hasarli_kaza|default:0 }},
+                        "olu_sayisi": {{ il.veriler.olu_sayisi|default:0 }},
+                        "yarali_sayisi": {{ il.veriler.yarali_sayisi|default:0 }}
+                    }{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            }`;
+            const ilVerileri = JSON.parse(ilVerileriJSON);
+            
+            // SVG boyutları ve harita kodları...
+        });
+    </script>
+{% endblock %} 

@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Türkiye Geneli - TTKA{% endblock %}
+
+{% block extra_css %}
+    <style>
+        /* Page Title Styles */
+        .page-title {
+            background-color: #2f4d5a !important;
+            padding: 120px 0 60px;
+            position: relative;
+        }
+        
+        .page-title h1 {
+            color: #fff;
+            font-size: 32px;
+            margin-bottom: 15px;
+        }
+        
+        .page-title p {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 0;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<main class="main">
+    <!-- Page Title -->
+    <div class="page-title">
+        <div class="container position-relative">
+            <h1>Türkiye Geneli Kaza İstatistikleri</h1>
+            <p>{{ selected_yil }} - {{ selected_ay }}</p>
+        </div>
+    </div>
+
+    <section class="section">
+        <div class="container">
+            <!-- Filtreler -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="get" class="row g-3">
+                                <div class="col-md-5">
+                                    <label for="yil" class="form-label">Yıl</label>
+                                    <select class="form-select" id="yil" name="yil">
+                                        {% for yil in available_years %}
+                                        <option value="{{ yil }}" {% if yil|stringformat:"s" == selected_yil %}selected{% endif %}>{{ yil }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-5">
+                                    <label for="ay" class="form-label">Ay</label>
+                                    <select class="form-select" id="ay" name="ay">
+                                        {% for ay in available_months %}
+                                        <option value="{{ ay }}" {% if ay == selected_ay %}selected{% endif %}>{{ ay }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-primary w-100">Filtrele</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Veri Tabloları -->
+            {% if genel_veri %}
+            <div class="row">
+                <!-- Yerleşim Yeri -->
+                <div class="col-md-12 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">Yerleşim Yeri İçi Kazalar</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <th>Toplam Kaza</th>
+                                        <th>Ölümlü Kaza</th>
+                                        <th>Yaralanmalı Kaza</th>
+                                        <th>Maddi Hasarlı Kaza</th>
+                                        <th>Ölü Sayısı</th>
+                                        <th>Yaralı Sayısı</th>
+                                    </tr>
+                                    <tr>
+                                        <td>{{ genel_veri.veriler.yerlesim_yeri.toplam_kaza_sayisi }}</td>
+                                        <td>{{ genel_veri.veriler.yerlesim_yeri.olumlu_kaza_sayisi }}</td>
+                                        <td>{{ genel_veri.veriler.yerlesim_yeri.yaralanmali_kaza_sayisi }}</td>
+                                        <td>{{ genel_veri.veriler.yerlesim_yeri.maddi_hasarli_kaza_sayisi }}</td>
+                                        <td>{{ genel_veri.veriler.yerlesim_yeri.olu_sayisi }}</td>
+                                        <td>{{ genel_veri.veriler.yerlesim_yeri.yarali_sayisi }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Yerleşim Yeri Dışı -->
+                <div class="col-md-12 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="card-title mb-0">Yerleşim Yeri Dışı Kazalar</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <th>Toplam Kaza</th>
+                                        <th>Ölümlü Kaza</th>
+                                        <th>Yaralanmalı Kaza</th>
+                                        <th>Maddi Hasarlı Kaza</th>
+                                        <th>Ölü Sayısı</th>
+                                        <th>Yaralı Sayısı</th>
+                                    </tr>
+                                    <tr>
+                                        <td>{{ genel_veri.veriler.yerlesim_yeri_disi.toplam_kaza_sayisi }}</td>
+                                        <td>{{ genel_veri.veriler.yerlesim_yeri_disi.olumlu_kaza_sayisi }}</td>
+                                        <td>{{ genel_veri.veriler.yerlesim_yeri_disi.yaralanmali_kaza_sayisi }}</td>
+                                        <td>{{ genel_veri.veriler.yerlesim_yeri_disi.maddi_hasarli_kaza_sayisi }}</td>
+                                        <td>{{ genel_veri.veriler.yerlesim_yeri_disi.olu_sayisi }}</td>
+                                        <td>{{ genel_veri.veriler.yerlesim_yeri_disi.yarali_sayisi }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Toplam -->
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header bg-dark text-white">
+                            <h5 class="card-title mb-0">Toplam Kazalar</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <th>Toplam Kaza</th>
+                                        <th>Ölümlü Kaza</th>
+                                        <th>Yaralanmalı Kaza</th>
+                                        <th>Maddi Hasarlı Kaza</th>
+                                        <th>Ölü Sayısı</th>
+                                        <th>Yaralı Sayısı</th>
+                                    </tr>
+                                    <tr>
+                                        <td>{{ genel_veri.veriler.toplam.toplam_kaza_sayisi }}</td>
+                                        <td>{{ genel_veri.veriler.toplam.olumlu_kaza_sayisi }}</td>
+                                        <td>{{ genel_veri.veriler.toplam.yaralanmali_kaza_sayisi }}</td>
+                                        <td>{{ genel_veri.veriler.toplam.maddi_hasarli_kaza_sayisi }}</td>
+                                        <td>{{ genel_veri.veriler.toplam.olu_sayisi }}</td>
+                                        <td>{{ genel_veri.veriler.toplam.yarali_sayisi }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                Seçili tarih için veri bulunamadı.
+            </div>
+            {% endif %}
+        </div>
+    </section>
+</main>
+{% endblock %} 

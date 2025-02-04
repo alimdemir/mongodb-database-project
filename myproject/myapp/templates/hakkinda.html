@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Hakkında - TTKA{% endblock %}
+
+{% block extra_css %}
+    <style>
+        /* Page Title Styles */
+        .page-title {
+            background-color: #2f4d5a !important;
+            padding: 120px 0 60px;
+            position: relative;
+        }
+        
+        .page-title h1 {
+            color: #fff;
+            font-size: 32px;
+            margin-bottom: 15px;
+        }
+        
+        .page-title p {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 0;
+        }
+
+        .about-section {
+            padding: 60px 0;
+        }
+
+        .about-content {
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <main class="main">
+        <!-- Page Title -->
+        <div class="page-title">
+            <div class="container position-relative">
+                <h1>Hakkında</h1>
+                <p>Türkiye Trafik Kazaları Analizi Projesi</p>
+            </div>
+        </div>
+
+        <!-- About Content -->
+        <section class="about-section">
+            <div class="container">
+                <div class="about-content">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <h2 class="mb-4">Proje Hakkında</h2>
+                            <p>Bu proje, Türkiye'deki trafik kazalarının kapsamlı bir analizini sunmayı amaçlamaktadır. Trafik kazalarının il bazında dağılımı, kaza türleri, ölümlü ve yaralanmalı kazaların analizi gibi detaylı istatistiksel veriler sunulmaktadır.</p>
+                            
+                            <h3 class="mt-5 mb-3">Veri Kaynakları</h3>
+                            <p>Projede kullanılan veriler EGM Trafik Başkanlığı'ndan elde edilmiştir.</p>
+                            
+                            
+                            <div class="developer-info mt-5">
+                                <h3 class="mb-4">Geliştirici</h3>
+                                <div class="d-flex align-items-center">
+                                    <img src="https://avatars.githubusercontent.com/alimdemir5" alt="Alim Demir" class="rounded-circle me-4" style="width: 100px; height: 100px;">
+                                    <div>
+                                        <h4>Alim Demir</h4>
+                                        <p class="mb-2">AI and Data Engineering</p>
+                                        <div class="social-links">
+                                            <a href="https://github.com/alimdemir" target="_blank" class="me-3">
+                                                <i class="bi bi-github"></i> GitHub
+                                            </a>
+                                            <a href="https://www.linkedin.com/in/alim-demir/?locale=en_US" target="_blank" class="me-3">
+                                                <i class="bi bi-linkedin"></i> LinkedIn
+                                            </a>
+                                            <a href="mailto:demiralim30@gmail.com">
+                                                <i class="bi bi-envelope"></i> demiralim30@gmail.com
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer id="footer" class="footer dark-background">
+            <div class="container footer-top">
+                <div class="row gy-4">
+                    <div class="col-lg-4 col-md-6 footer-about">
+                        <a href="{% url 'index' %}" class="logo d-flex align-items-center">
+                            <span class="sitename">TTKA</span>
+                        </a>
+                        <div class="footer-contact pt-3">
+                            <p>Türkiye Trafik Kazaları Analizi</p>
+                            <p>Elazığ, Türkiye</p>
+                            <p class="mt-3"><strong>İletişim:</strong> <span>demiralim30@gmail.com</span></p>
+                        </div>
+                        <div class="social-links d-flex mt-4">
+                            <a href="https://github.com/alimdemir" target="_blank"><i class="bi bi-github"></i></a>
+                            <a href="https://www.linkedin.com/in/alim-demir/?locale=en_US" target="_blank"><i class="bi bi-linkedin"></i></a>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-md-3 footer-links">
+                        <h4>Hızlı Erişim</h4>
+                        <ul>
+                            <li><a href="{% url 'index' %}">Anasayfa</a></li>
+                            <li><a href="{% url 'turkiye_geneli' %}">Türkiye Geneli</a></li>
+                            <li><a href="{% url 'iller' %}">İller</a></li>
+                            <li><a href="{% url 'olumlu_yaralanmali' %}">Ölümlü-Yaralanmalı Kazalar</a></li>
+                            <li><a href="{% url 'ceza' %}">Trafik Cezaları</a></li>
+                            <li><a href="{% url 'hakkinda' %}">Hakkında</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="col-lg-4 col-md-3 footer-links">
+                        <h4>Veri Kaynakları</h4>
+                        <ul>
+                            <li><a href="#">EGM Trafik Başkanlığı</a></li>
+                            <li><a href="#">TÜİK</a></li>
+                            <li><a href="#">Karayolları Genel Müdürlüğü</a></li>
+                            <li><a href="#">İçişleri Bakanlığı</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container copyright text-center mt-4">
+                <p>© <span>2025</span> <strong class="px-1 sitename">TTKA</strong> <span>Tüm Hakları Saklıdır</span></p>
+                <div class="credits">
+                    Türkiye Trafik Kazaları Analizi Platformu
+                </div>
+            </div>
+        </footer>
+    </main>
+{% endblock %} 

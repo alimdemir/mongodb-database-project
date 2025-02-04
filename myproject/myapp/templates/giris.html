@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="section" style="margin-top: 100px;">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h3 class="card-title text-center mb-4">Giriş Yap</h3>
+            
+            {% if messages %}
+            <div class="messages mb-3">
+              {% for message in messages %}
+              <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+              </div>
+              {% endfor %}
+            </div>
+            {% endif %}
+            
+            <form method="post" action="{% url 'giris' %}" novalidate>
+              {% csrf_token %}
+              <div class="mb-3">
+                <label for="username" class="form-label">Kullanıcı Adı</label>
+                <input type="text" class="form-control" id="username" name="username" required>
+              </div>
+              <div class="mb-3">
+                <label for="password" class="form-label">Şifre</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+              </div>
+              <div class="d-grid">
+                <button type="submit" class="btn btn-primary">Giriş Yap</button>
+              </div>
+            </form>
+            
+            <div class="text-center mt-3">
+              <p>Hesabınız yok mu? <a href="{% url 'kayit' %}">Kayıt Ol</a></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+.section {
+    min-height: calc(100vh - 200px);
+    display: flex;
+    align-items: center;
+}
+
+.card {
+    background: #2f4d5a;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+}
+
+.card-title {
+    color: #ffffff;
+}
+
+.form-label {
+    color: #ffffff;
+}
+
+.form-control {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+.form-control:focus {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: #8ec4dd;
+    color: #ffffff;
+    box-shadow: none;
+}
+
+.form-control::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.btn-primary {
+    background-color: #8ec4dd;
+    border: none;
+    color: #2f4d5a;
+    font-weight: 600;
+    padding: 10px 20px;
+}
+
+.btn-primary:hover {
+    background-color: #ffffff;
+    color: #2f4d5a;
+}
+
+a {
+    color: #8ec4dd;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: #ffffff;
+}
+
+.alert {
+    border: none;
+    border-radius: 4px;
+}
+
+.alert-error {
+    background-color: #dc3545;
+    color: #ffffff;
+}
+
+.alert-success {
+    background-color: #28a745;
+    color: #ffffff;
+}
+
+.messages {
+    margin-bottom: 20px;
+}
+</style>
+{% endblock %} 

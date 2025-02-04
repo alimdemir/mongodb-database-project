@@ -1,0 +1,931 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ölümlü-Yaralanmalı Kazalar - TTKA</title>
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+
+  <!-- Favicons -->
+  <link href="{% static 'img/favicon.png' %}" rel="icon">
+  <link href="{% static 'img/apple-touch-icon.png' %}" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/aos/aos.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/glightbox/css/glightbox.min.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/swiper/swiper-bundle.min.css' %}" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+
+  <!-- Graphic -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+
+
+  <!-- =======================================================
+  * Template Name: Squadfree
+  * Template URL: https://bootstrapmade.com/squadfree-free-bootstrap-template-creative/
+  * Updated: Aug 07 2024 with Bootstrap v5.3.3
+  * Author: BootstrapMade.com
+  * License: https://bootstrapmade.com/license/
+  ======================================================== -->
+
+  <style>
+    /* CSS ayarları */
+    body { font-family: Arial, sans-serif; background-color: #f4f4f9; }
+    h1 { text-align: center; margin: 20px; }
+    table { width: 90%; margin: 20px auto; border-collapse: collapse; background-color: #fff; }
+    th, td { padding: 10px; text-align: center; border: 1px solid #ddd; }
+    th { background-color: #4CAF50; color: white; }
+    tr:nth-child(even) { background-color: #f2f2f2; }
+    
+    /* Grafik boyutları */
+    .chart-container {
+        width: 80%;
+        margin: 40px auto;
+    }
+
+    canvas {
+        display: block;
+        max-width: 100%;
+        height: 500px; /* Grafik yüksekliği arttırıldı */
+        width: 800px;  /* Grafik genişliği arttırıldı */
+    }
+
+    #map-wrapper {
+        width: 100%;
+        height: 600px;
+        position: relative;
+        margin: 20px auto;
+    }
+
+    #turkey-map-svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+
+    .land {
+        fill: #f4f4f4;
+        stroke: #000;
+        stroke-width: 0.5;
+        transition: fill 0.3s;
+    }
+
+    .land:hover {
+        fill: #ff0000;
+        cursor: pointer;
+    }
+
+    #tooltip {
+        position: absolute;
+        background: white;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        pointer-events: none;
+        z-index: 1000;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .filter-container {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 30px auto;
+      max-width: 600px;
+      box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .filter-container select {
+      padding: 8px 15px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      background-color: #ffffff;
+      color: #444444;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .filter-container select:hover {
+      background-color: #f5f5f5;
+      border-color: #2f4d5a;
+    }
+
+    .filter-container label {
+      color: #2f4d5a;
+      font-weight: 500;
+      margin-right: 10px;
+    }
+
+    .chart-container {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 30px auto;
+      box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .table {
+      background: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .table th {
+      background-color: #2f4d5a;
+      color: #ffffff;
+    }
+
+    .table tr:hover {
+      background-color: #f5f5f5;
+    }
+
+    .page-title {
+      background-color: #2f4d5a !important;
+      padding: 120px 0 60px;
+      position: relative;
+    }
+
+    .page-title h1 {
+      color: #fff;
+      font-size: 32px;
+      margin-bottom: 15px;
+    }
+
+    .page-title p {
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 0;
+    }
+
+    .filters-section {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #2f4d5a;
+    }
+
+    .btn-primary {
+        background-color: #2f4d5a;
+        border-color: #2f4d5a;
+    }
+
+    .btn-primary:hover {
+        background-color: #1f3d4a;
+        border-color: #1f3d4a;
+    }
+
+    /* Admin Panel Styles */
+    .admin-badge {
+        background-color: #28a745;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.8em;
+        margin-left: 5px;
+    }
+    
+    .admin-indicator {
+        background-color: #28a745;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.8em;
+        margin-left: auto;
+    }
+
+    .header {
+        transition: all 0.3s ease;
+    }
+    
+    .header.sticked {
+        background-color: #2f4d5a !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+
+<body class="index-page">
+
+  <!-- Yeni Header -->
+  <header id="header" class="header d-flex align-items-center fixed-top">
+    <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+      <a href="{% url 'index' %}" class="logo d-flex align-items-center">
+        <h1 class="sitename">TTKA</h1>
+      </a>
+      
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="{% url 'index' %}">Anasayfa</a></li>
+          <li><a href="#about">Türkiye Geneli</a></li>
+          <li><a href="{% url 'iller' %}">İller</a></li>
+          <li><a href="{% url 'olumlu_yaralanmali' %}" class="active">Ölümlü-Yaralanmalı Kazalar</a></li>
+          <li><a href="{% url 'ceza' %}">Trafik Cezaları</a></li>
+          <li><a href="#about">Hakkında</a></li>
+          
+          {% if user_data.is_authenticated %}
+            <li class="nav-item dropdown ms-auto">
+              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-person-circle me-1"></i>
+                {{ user_data.username }}
+                {% if user_data.username == 'alim' %}
+                  <span class="admin-badge">Yönetici</span>
+                {% endif %}
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profilim</a></li>
+                {% if user_data.username == 'alim' %}
+                  <li>
+                    <a class="dropdown-item d-flex align-items-center" href="{% url 'yonetici:panel' %}">
+                      <i class="bi bi-shield-lock me-2"></i>
+                      Yönetici Paneli
+                      <span class="admin-indicator">Yönetici</span>
+                    </a>
+                  </li>
+                {% endif %}
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{% url 'cikis' %}"><i class="bi bi-box-arrow-right me-2"></i>Çıkış Yap</a></li>
+              </ul>
+            </li>
+          {% else %}
+            <li class="ms-auto"><a href="{% url 'giris' %}">Giriş Yap</a></li>
+            <li><a href="{% url 'kayit' %}">Kayıt Ol</a></li>
+          {% endif %}
+        </ul>
+        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- Page Title -->
+    <div class="page-title">
+      <div class="container position-relative">
+        <h1>{{ selected_yil }} - {{ selected_ay }} Ayı Kaza İstatistikleri</h1>
+        <p>Ölümlü ve Yaralanmalı Trafik Kazaları Analizi</p>
+      </div>
+    </div>
+
+    <!-- Main Content Section -->
+    <section class="section">
+      <div class="container">
+        <!-- Filters Section -->
+        <div class="filters-section mb-4">
+          <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+              <label for="yil" class="form-label">Yıl</label>
+              <select name="yil" id="yil" class="form-select">
+                {% for yil in available_years %}
+                  <option value="{{ yil }}" {% if yil|stringformat:"i" == selected_yil %}selected{% endif %}>
+                    {{ yil }}
+                  </option>
+                {% empty %}
+                  <option value="2023">2023</option>
+                {% endfor %}
+              </select>
+            </div>
+            
+            <div class="col-md-3">
+              <label for="ay" class="form-label">Ay</label>
+              <select name="ay" id="ay" class="form-select">
+                {% for ay in available_months %}
+                  <option value="{{ ay }}" {% if ay == selected_ay %}selected{% endif %}>
+                    {{ ay }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            
+            <div class="col-md-4">
+              <label for="search" class="form-label">Ara</label>
+              <input type="text" name="search" id="search" class="form-control" 
+                     value="{{ request.GET.search }}" placeholder="Kaza türü veya araç cinsi...">
+            </div>
+            
+            <div class="col-md-2">
+              <button type="submit" class="btn btn-primary w-100">Filtrele</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Kaza Oluş Türleri Kartı -->
+        <div class="card mb-5">
+          <div class="card-header bg-primary text-white">
+            <h3 class="card-title mb-0">Kaza Oluş Türleri</h3>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <!-- Tablo -->
+              <div class="col-md-6">
+                <div class="table-responsive">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Yıl</th>
+                        <th>Ay</th>
+                        <th>Kaza Oluş Türü</th>
+                        <th>Kaza Sayısı</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for kaza in kazalar %}
+                      <tr>
+                        <td>{{ kaza.yil }}</td>
+                        <td>{{ kaza.ay }}</td>
+                        <td>{{ kaza.veriler.kaza_olus_turu }}</td>
+                        <td>{{ kaza.veriler.kaza_sayisi }}</td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <!-- Grafik -->
+              <div class="col-md-6">
+                <div class="chart-container">
+                  <canvas id="barChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Araç Cinsleri Kartı -->
+        <div class="card mb-5">
+          <div class="card-header bg-primary text-white">
+            <h3 class="card-title mb-0">Araç Cinsleri</h3>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <!-- Tablo -->
+              <div class="col-md-6">
+                <div class="table-responsive">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Yıl</th>
+                        <th>Ay</th>
+                        <th>Araç Cinsi</th>
+                        <th>Araç Sayısı</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for arac in arac_verileri %}
+                        {% if arac.veriler.arac_cinsi and arac.veriler.arac_sayisi %}
+                        <tr>
+                          <td>{{ arac.yil }}</td>
+                          <td>{{ arac.ay|title }}</td>
+                          <td>{{ arac.veriler.arac_cinsi }}</td>
+                          <td>{{ arac.veriler.arac_sayisi }}</td>
+                        </tr>
+                        {% endif %}
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <!-- Grafik -->
+              <div class="col-md-6">
+                <div class="chart-container">
+                  <canvas id="donutChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Kaza Araç Sayısı Kartı -->
+        <div class="card mb-5">
+          <div class="card-header bg-primary text-white">
+            <h3 class="card-title mb-0">Kaza Araç Sayısı Dağılımı</h3>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <!-- Tablo -->
+              <div class="col-md-6">
+                <div class="table-responsive">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Yıl</th>
+                        <th>Ay</th>
+                        <th>Araç Türü</th>
+                        <th>Ölümlü/Yaralanmalı Kaza</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% if kaza_arac_verileri %}
+                        {% for veri in kaza_arac_verileri %}
+                          {% if veri.veriler.arac_turu and veri.veriler.arac_sayisi %}
+                          <tr>
+                            <td>{{ veri.yil }}</td>
+                            <td>{{ veri.ay|title }}</td>
+                            <td>{{ veri.veriler.arac_turu }}</td>
+                            <td>{{ veri.veriler.arac_sayisi }}</td>
+                          </tr>
+                          {% endif %}
+                        {% endfor %}
+                      {% else %}
+                        <tr>
+                          <td colspan="4">Veri bulunamadı</td>
+                        </tr>
+                      {% endif %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <!-- Grafik -->
+              <div class="col-md-6">
+                <div class="chart-container">
+                  <canvas id="kazaAracSayisiGrafik"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Kaza Unsurları Kartı -->
+        <div class="card mb-5">
+          <div class="card-header bg-primary text-white">
+            <h3 class="card-title mb-0">Trafik Kazalarına Neden Olan Unsurlar</h3>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <!-- Tablo -->
+              <div class="col-md-6">
+                <div class="table-responsive">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Yıl</th>
+                        <th>Ay</th>
+                        <th>Kusur Unsuru</th>
+                        <th>Kusur Sayısı</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% if kaza_unsurlari_verileri %}
+                        {% for veri in kaza_unsurlari_verileri %}
+                          {% if veri.veriler.kusur_unsuru and veri.veriler.kusur_sayisi %}
+                          <tr>
+                            <td>{{ veri.yil }}</td>
+                            <td>{{ veri.ay|title }}</td>
+                            <td>{{ veri.veriler.kusur_unsuru }}</td>
+                            <td>{{ veri.veriler.kusur_sayisi }}</td>
+                          </tr>
+                          {% endif %}
+                        {% endfor %}
+                      {% else %}
+                        <tr>
+                          <td colspan="4">Veri bulunamadı</td>
+                        </tr>
+                      {% endif %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <!-- Grafik -->
+              <div class="col-md-6">
+                <div class="chart-container">
+                  <canvas id="kazaUnsurlariGrafik"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sürücü Kusurları Kartı -->
+        <div class="card mb-5">
+          <div class="card-header bg-primary text-white">
+            <h3 class="card-title mb-0">Trafik Kazalarına Neden Olan Sürücü Kusurları</h3>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <!-- Tablo -->
+              <div class="col-md-6">
+                <div class="table-responsive">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Yıl</th>
+                        <th>Ay</th>
+                        <th>Kusur Türü</th>
+                        <th>Kusur Sayısı</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% if surucu_kusurlari_verileri %}
+                        {% for veri in surucu_kusurlari_verileri %}
+                          {% if veri.veriler.kusur_turu and veri.veriler.kusur_sayisi %}
+                          <tr>
+                            <td>{{ veri.yil }}</td>
+                            <td>{{ veri.ay|title }}</td>
+                            <td>{{ veri.veriler.kusur_turu }}</td>
+                            <td>{{ veri.veriler.kusur_sayisi }}</td>
+                          </tr>
+                          {% endif %}
+                        {% endfor %}
+                      {% else %}
+                        <tr>
+                          <td colspan="4">Veri bulunamadı</td>
+                        </tr>
+                      {% endif %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <!-- Grafik -->
+              <div class="col-md-6">
+                <div class="chart-container">
+                  <canvas id="surucuKusurlariGrafik"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer id="footer" class="footer">
+    <div class="container copyright text-center mt-4">
+      <p>© <span>Copyright</span> <strong class="px-1">TTKA</strong> <span>All Rights Reserved</span></p>
+    </div>
+  </footer>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center">
+    <i class="bi bi-arrow-up-short"></i>
+  </a>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'vendor/aos/aos.js' %}"></script>
+  <script src="{% static 'vendor/glightbox/js/glightbox.min.js' %}"></script>
+  <script src="{% static 'vendor/swiper/swiper-bundle.min.js' %}"></script>
+
+  <!-- Custom Scripts -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Mobile nav toggle
+      const mobileNavShow = document.querySelector('.mobile-nav-show');
+      const mobileNavHide = document.querySelector('.mobile-nav-hide');
+      const mobileNavToggles = document.querySelectorAll('.mobile-nav-toggle');
+
+      if (mobileNavToggles.length > 0) {
+        mobileNavToggles.forEach(el => {
+          el.addEventListener('click', function(event) {
+            event.preventDefault();
+            document.querySelector('body').classList.toggle('mobile-nav-active');
+            mobileNavShow?.classList.toggle('d-none');
+            mobileNavHide?.classList.toggle('d-none');
+          });
+        });
+      }
+
+      // Hide mobile nav on same-page/hash links
+      document.querySelectorAll('#navmenu a').forEach(navmenu => {
+        navmenu.addEventListener('click', () => {
+          if (document.querySelector('.mobile-nav-active')) {
+            document.querySelector('body').classList.remove('mobile-nav-active');
+            mobileNavShow?.classList.remove('d-none');
+            mobileNavHide?.classList.add('d-none');
+          }
+        });
+      });
+
+      // Scroll top functionality
+      const scrollTop = document.querySelector('.scroll-top');
+      if (scrollTop) {
+        const toggleScrollTop = () => {
+          window.scrollY > 100 ? scrollTop.classList.add('active') : scrollTop.classList.remove('active');
+        };
+
+        window.addEventListener('load', toggleScrollTop);
+        document.addEventListener('scroll', toggleScrollTop);
+
+        scrollTop.addEventListener('click', (e) => {
+          e.preventDefault();
+          window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          });
+        });
+      }
+
+      // Header scroll class
+      const selectHeader = document.querySelector('#header');
+      if (selectHeader) {
+        const headerScrolled = () => {
+          if (window.scrollY > 100) {
+            selectHeader.classList.add('header-scrolled');
+          } else {
+            selectHeader.classList.remove('header-scrolled');
+          }
+        };
+        window.addEventListener('load', headerScrolled);
+        document.addEventListener('scroll', headerScrolled);
+      }
+
+      // Remove preloader
+      const preloader = document.querySelector('#preloader');
+      if (preloader) {
+        window.addEventListener('load', () => {
+          preloader.remove();
+        });
+      }
+    });
+  </script>
+
+  <!-- Grafik kodlarını ekleyin (diğer script'lerden sonra) -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Bar Chart
+        const barData = JSON.parse('{{ bar_chart_data|safe }}');
+        const barCtx = document.getElementById('barChart').getContext('2d');
+        new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: barData.kaza_olus_turleri,
+                datasets: [{
+                    label: 'Kaza Sayıları',
+                    data: barData.kaza_sayilari,
+                    backgroundColor: 'rgba(47, 77, 90, 0.8)',
+                    borderColor: 'rgb(47, 77, 90)',
+                    borderWidth: 1,
+                    barThickness: 25  // Bar genişliğini artır
+                }]
+            },
+            options: {
+                indexAxis: 'y',  // Yatay bar grafik için
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: {
+                            display: true,
+                            drawBorder: true,
+                            drawOnChartArea: true,
+                            drawTicks: true,
+                        }
+                    },
+                    y: {
+                        ticks: {
+                            callback: function(value) {
+                                const label = this.getLabelForValue(value);
+                                const words = label.split(' ');
+                                const lines = [];
+                                let currentLine = words[0];
+
+                                for(let i = 1; i < words.length; i++) {
+                                    if (currentLine.length + words[i].length < 30) {
+                                        currentLine += " " + words[i];
+                                    } else {
+                                        lines.push(currentLine);
+                                        currentLine = words[i];
+                                    }
+                                }
+                                lines.push(currentLine);
+                                return lines;
+                            },
+                            maxRotation: 0,
+                            minRotation: 0
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+        // Donut Chart
+        const donutData = JSON.parse('{{ donut_chart_data|safe }}');
+        const donutCtx = document.getElementById('donutChart').getContext('2d');
+        new Chart(donutCtx, {
+            type: 'doughnut',
+            data: {
+                labels: donutData.arac_cinsi,
+                datasets: [{
+                    data: donutData.kaza_sayisi,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(153, 102, 255, 0.7)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        // Kaza Araç Sayısı Grafiği
+        const kazaAracData = JSON.parse('{{ kaza_arac_sayisi_data|safe }}');
+        const kazaAracCtx = document.getElementById('kazaAracSayisiGrafik').getContext('2d');
+        new Chart(kazaAracCtx, {
+            type: 'doughnut',
+            data: {
+                labels: kazaAracData.labels,
+                datasets: [{
+                    data: kazaAracData.values,
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.7)',  // Mavi
+                        'rgba(255, 99, 132, 0.7)',  // Kırmızı
+                        'rgba(255, 206, 86, 0.7)',  // Sarı
+                        'rgba(75, 192, 192, 0.7)',  // Turkuaz
+                        'rgba(153, 102, 255, 0.7)'  // Mor
+                    ],
+                    borderColor: [
+                        'rgb(54, 162, 235)',
+                        'rgb(255, 99, 132)',
+                        'rgb(255, 206, 86)',
+                        'rgb(75, 192, 192)',
+                        'rgb(153, 102, 255)'
+                    ],
+                    borderWidth: 1,
+                    cutout: '60%'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',  // Legend'ı üste taşı
+                        align: 'center',  // Merkeze hizala
+                        labels: {
+                            padding: 20,
+                            font: {
+                                size: 13,  // Font boyutunu artır
+                                weight: 'bold'  // Yazıları kalın yap
+                            },
+                            usePointStyle: true,  // Yuvarlak gösterge stilleri
+                            pointStyle: 'circle'  // Yuvarlak nokta stili
+                        }
+                    }
+                },
+                layout: {
+                    padding: {
+                        top: 20,    // Üstten boşluk
+                        bottom: 20, // Alttan boşluk
+                        left: 20,   // Soldan boşluk
+                        right: 20   // Sağdan boşluk
+                    }
+                }
+            }
+        });
+
+        // Kaza Unsurları Grafiği
+        const kazaUnsurData = JSON.parse('{{ kaza_unsurlari_data|safe }}');
+        const kazaUnsurCtx = document.getElementById('kazaUnsurlariGrafik').getContext('2d');
+        new Chart(kazaUnsurCtx, {
+            type: 'bar',
+            data: {
+                labels: kazaUnsurData.labels,
+                datasets: [{
+                    label: 'Kusur Sayısı',
+                    data: kazaUnsurData.values,
+                    backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                    borderColor: 'rgb(75, 192, 192)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Sürücü Kusurları Grafiği
+        const surucuKusurData = JSON.parse('{{ surucu_kusurlari_data|safe }}');
+        const surucuKusurCtx = document.getElementById('surucuKusurlariGrafik').getContext('2d');
+        new Chart(surucuKusurCtx, {
+            type: 'bar',
+            data: {
+                labels: surucuKusurData.labels,
+                datasets: [{
+                    label: 'Kusur Sayısı',
+                    data: surucuKusurData.values,
+                    backgroundColor: 'rgba(153, 102, 255, 0.7)',
+                    borderColor: 'rgb(153, 102, 255)',
+                    borderWidth: 1,
+                    barThickness: 35,  // Bar genişliğini artır
+                    barPercentage: 0.8,  // Barların genişlik yüzdesi
+                    categoryPercentage: 0.7  // Kategoriler arası mesafe
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: {
+                            display: true,
+                            drawBorder: true,
+                            drawOnChartArea: true,
+                            drawTicks: true,
+                        }
+                    },
+                    y: {
+                        ticks: {
+                            callback: function(value) {
+                                const label = this.getLabelForValue(value);
+                                const words = label.split(' ');
+                                const lines = [];
+                                let currentLine = words[0];
+
+                                for(let i = 1; i < words.length; i++) {
+                                    if (currentLine.length + words[i].length < 25) {  // Daha kısa satırlar
+                                        currentLine += " " + words[i];
+                                    } else {
+                                        lines.push(currentLine);
+                                        currentLine = words[i];
+                                    }
+                                }
+                                lines.push(currentLine);
+                                return lines;
+                            },
+                            maxRotation: 0,
+                            minRotation: 0,
+                            padding: 10,  // Etiketler arası padding
+                            font: {
+                                size: 12  // Font boyutunu ayarla
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                layout: {
+                    padding: {
+                        left: 20,
+                        right: 20,
+                        top: 20,
+                        bottom: 20
+                    }
+                }
+            }
+        });
+    });
+  </script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Header scroll class
+        let selectHeader = document.querySelector('#header');
+        if (selectHeader) {
+            document.addEventListener('scroll', () => {
+                window.scrollY > 100 
+                    ? selectHeader.classList.add('sticked')
+                    : selectHeader.classList.remove('sticked');
+            });
+        }
+    });
+  </script>
+
+  
+</body>
+</html> 

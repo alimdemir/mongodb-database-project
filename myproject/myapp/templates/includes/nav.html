@@ -1,0 +1,46 @@
+<nav id="navmenu" class="navmenu">
+  <ul>
+    <li><a href="{% url 'index' %}" {% if request.path == '/' %}class="active"{% endif %}>Anasayfa</a></li>
+    <li><a href="#about">Türkiye Geneli</a></li>
+    <li><a href="{% url 'iller' %}" {% if request.path == '/iller/' %}class="active"{% endif %}>İller</a></li>
+    <li class="dropdown">
+      <a href="#"><span>Yıllar</span> <i class="bi bi-chevron-down"></i></a>
+      <ul>
+        <li class="dropdown">
+          <a href="#"><span>2023</span> <i class="bi bi-chevron-down"></i></a>
+          <ul>
+            <li><a href="#">Ocak</a></li>
+            <li><a href="#">Şubat</a></li>
+            <li><a href="#">Mart</a></li>
+            <li><a href="#">Nisan</a></li>
+            <li><a href="#">Mayıs</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="{% url 'olumlu_yaralanmali' %}" {% if request.path == '/olumlu-yaralanmali/' %}class="active"{% endif %}>Ölümlü-Yaralanmalı Kazalar</a></li>
+    {% if user.is_authenticated %}
+      <li class="dropdown">
+        <a href="#">
+          <span>
+            {{ user.username }}
+            {% if user.username == 'alim' %}
+              <span class="admin-indicator">Admin</span>
+            {% endif %}
+          </span>
+          <i class="bi bi-chevron-down"></i>
+        </a>
+        <ul>
+          {% if user.username == 'alim' %}
+            <li><a href="{% url 'veri_yonetimi' %}">Admin Paneli</a></li>
+          {% endif %}
+          <li><a href="{% url 'cikis' %}">Çıkış Yap</a></li>
+        </ul>
+      </li>
+    {% else %}
+      <li><a href="{% url 'giris' %}">Giriş Yap</a></li>
+      <li><a href="{% url 'kayit' %}">Kayıt Ol</a></li>
+    {% endif %}
+  </ul>
+  <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+</nav> 
